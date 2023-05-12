@@ -57,12 +57,20 @@ class TbWClass:
 
     #this is the end of initializer. Now we can apply preselection:
     # preselection we apply are the following:
-    # at least 1 muon or electron above 50 GeV
-    # the separation between AK8 and AK4 is greater than pi/2
-    # we first want to mark all the event with at least 2 jets
+    # we first want to mark all the event with:
     def Preselection(self):
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
-        self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet is b tagged
+        self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code
-        self.a.Cut('DijetIds','PickDijets(FatJet_phi,Jet_Phi,)') #Jet selection
+        self.a.Define('DijetIds','PickDijets(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCMVA)') #Jet selection parameter creation{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one Jet is b-tagged.
+        self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] == 1') #Cut the data according to our standard.
+        return self.a.GetActiveNode()
+    
+    #now we define the selection according to the following standard: top tagging AK8, and a 2D cut on lepton+b
+    def Selection(self,Ttag):
+        self.a.Cut('TopTagging','FatJet_deepTagMD_TvsQCD[DijetIds[0]] > {}'.format(Ttag))
+        self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
+        self.a.ObjectFromCollection('Lep','')#how to make a column for lepton momentum?
+        return self.a.GetActiveNode()
+
         
