@@ -63,7 +63,7 @@ class TbWClass:
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code
         self.a.Define('DijetIds','PickDijets(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCMVA)') #Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one Jet is b-tagged.
-        self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] == 1') #Cut the data according to our standard.
+        self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] > -1') #Cut the data according to our standard (FatJet, Jet, Lepton condtion respectively)
         return self.a.GetActiveNode()
     
     #now we define the selection according to the following standard: top tagging AK8, and a 2D cut on lepton+b
@@ -73,9 +73,16 @@ class TbWClass:
         self.a.Define('ElectronId','CreateColumn(4,DijetIds)')#create a column "electron id" based on the 4th element of DijetIds
         self.a.Define('MuonId','CreateColumn(5,DijetIds)')#create a column for muon as well.
         self.a.Define('Pick2DCut','TwoDCut(ElectronId,MuonId,Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
-        self.a.Cut('2DCut','Pick2DCut[0] == -1 && Pick2DCut[1] == -1')#if either condition is met, we keep the event. Therefore cut only if both condition failed.
+        self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
         return self.a.GetActiveNode()
     
-    #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and msoftdrop manually. We will do this using a user defined C++ code.
-
-        
+    #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
+    def LeptonCandidateKinematicinfo(self):
+        self.a.Define('LeptonId','CreateColumn(2,DijetIds)')#create the electron/muon indicator
+        self.a.Define('Lepton_pt','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_pt,Muon_pt)')
+        self.a.Define('Lepton_eta','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_eta,Muon_eta)')
+        self.a.Define('Lepton_phi','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_phi,Muon_phi)')
+        self.a.Define('Lepton_mass','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_mass,Muon_mass)')
+        return self.a.GetActiveNode()
+    
+    #We are ready to make plots

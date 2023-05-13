@@ -15,13 +15,14 @@ RVec<int> PickDijets(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> El
     int Electronidx = -1;
     int Muonidx = -1;
     int Leptonpt = 0;
+    int C_Lepton_pt = -1;
     if (Electron_pt.size() < 1){
         if (Muon_pt.size() < 1){break;}
         else {
             for (iMuon = 0; iMuon < Muon_pt.size(); iMuon++){
                 if (Muon_pt[iMuon]>50){
                     Muonidx = iMuon//give the first Muon sastifying our condition
-                    Leptonidx = 1;//represent Muon as 1
+                    Leptonidx = 2;//represent Muon as 2
                     Leptonpt = Muon_pt[iMuon]//The momentum of lepton is given by this muon
                     for (int iJet = 0; iJet < Jet_phi.size(); iJet++){//find the back to back jets
                         for (int iFatJet =0; iFatJet < FatJet_phi.size(); iFatJet++){
@@ -59,11 +60,15 @@ RVec<int> PickDijets(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> El
 
         }
     }
-    return{FatJetidx,Jetidx,Leptonidx,Leptonpt,Electronidx,Muonidx}
+
+    if(Leptonpt>50){
+        C_Lepton_pt = 1;
+    }
+    return {FatJetidx,Jetidx,Leptonidx,C_Lepton_pt,Electronidx,Muonidx}//should fix this later. The C_Lepton_pt standard is useless.
 
 }
 
-//a short program to extract ith component of a column. Use when ObjectFromCollection does not satisfy our purpose
+//a short program to extract ith component of an column with integer type data. Use when ObjectFromCollection does not satisfy our purpose
 RVec<int> CreateColumn(int column, RVec<int> CalledColumn){
     int value = 0;
     value = CalledColumn[column]
@@ -99,4 +104,23 @@ RVec<int> TwoDCut(RVec<int> ElectronId, RVec<int> MuonId, RVec<float> Electron_j
     }
 
     return {Crel_pt,Crel_phi}
+}
+
+//lepton pt, eta, phi and mass of the lepton. This function should take in all related value of electron/muon and choose based on the value of Electron/Muon id
+
+RVec<float> GetFloatLeptonProperty(RVec<int> LeptonId, RVec<int> ElectronId, RVec<int> MuonId, RVec<float> ElectronProperty, RVec<float> MuonProperty){
+    int LeptonIndex = -1;//this parameter will be used to point to lepton properties;
+    float LeptonFloat = -1;//by setting default value to -1 will give us a warning messeage if no lepton satisfying condition exist. Such event should be cut in preselections
+    if(LeptonId == 1){//this is an electron
+        LeptonIndex = ElectronId[0];
+        LeptonFloat = ElectronProperty[LeptonIndex];//then the lepton's property used to construct 4 vector should be relavent electron property
+    }
+    else{
+        if(LeptonId == 2){//this is a muon
+            LeptonIndex = MuonId[0];
+            LeptonFloat = MuonProperty[LeptonIndex];
+        }
+    }
+
+    return {LeptonFloat}
 }
