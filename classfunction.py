@@ -5,7 +5,7 @@ from TIMBER.Tools.AutoPU import ApplyPU
 from helpers import SplitUp
 import TIMBER.Tools.AutoJME as AutoJME
 
-AutoJME.AK8collection = 'Trijet'
+AutoJME.AK8collection = 'Dijet'
 
 class ttbarClass:
     def __init__(self,inputfile,year,ijob,njobs):#initializer
@@ -67,7 +67,7 @@ class ttbarClass:
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code
-        self.a.Define('DijetIds','PickDijets(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCMVA)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
+        self.a.Define('DijetIds','PickDijets(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] > -1') #Cut the data according to our standard (FatJet, Jet, Lepton condtion respectively)
         return self.a.GetActiveNode()
     
@@ -75,31 +75,33 @@ class ttbarClass:
     def Selection(self,Ttagparam):
         self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
-        self.a.Define('ElectronId','CreateIntColumn(4,DijetIds)')#create a column "electron id" based on the 4th element of DijetIds
-        self.a.Define('MuonId','CreateIntColumn(5,DijetIds)')#create a column for muon as well.
-        self.a.Define('Pick2DCut','TwoDCut(ElectronId,MuonId,Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
+        #self.a.Define('ElectronId','CreateIntColumn(4,DijetIds)')#create a column "electron id" based on the 4th element of DijetIds. Edit: Do not use this. Simply call the relative DijetIds column
+        #self.a.Define('MuonId','CreateIntColumn(5,DijetIds)')#create a column for muon as well. Edit: Do not use this. Simply call the relative DijetIds column
+        self.a.Define('Pick2DCut','TwoDCut(DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
         self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
         return self.a.GetActiveNode()
     
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
     def JetsCandidateKinematicinfo(self):
         #first give relatvent information of lepton
-        self.a.Define('LeptonId','CreateColumn(2,DijetIds)')#create the electron/muon indicator
-        self.a.Define('Lepton_pt','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_pt,Muon_pt)')
-        self.a.Define('Lepton_eta','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_eta,Muon_eta)')
-        self.a.Define('Lepton_phi','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_phi,Muon_phi)')
-        self.a.Define('Lepton_mass','GetFloatLeptonProperty(LeptonId,ElectronId,MuonId,Electron_mass,Muon_mass)')
+        #self.a.Define('LeptonId','CreateColumn(2,DijetIds)')#create the electron/muon indicator Edit: Do not use this. Simply call the relative DijetIds column
+        self.a.Define('Lepton_pt','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt)')
+        self.a.Define('Lepton_eta','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_eta,Muon_eta)')
+        self.a.Define('Lepton_phi','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_phi,Muon_phi)')
+        self.a.Define('Lepton_mass','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_mass,Muon_mass)')
         # we do the same for AK8/4 candidate
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
         self.a.ObjectFromCollection('Bot','Jet','DijetIds[1]')
 
         #for Neutrino
-        self.a.Define('Neutrino_pt','CreateFloatColumn(0,MET_pt)')
-        self.a.Define('Neutrino_phi','CreateFloatColumn(0,MET_phi)')
-        Neutrinomass = float(0)
-        Neutrinoeta = float(0)
-        self.a.Define('Neutrino_eta',str(Neutrinoeta))
-        self.a.Define('Neutrino_mass',str(Neutrinomass))
+        self.a.Define('Neutrino_pt','MET_pt')
+        self.a.Define('Neutrino_phi','MET_phi')
+        #Neutrinomass = float(0)
+        #Neutrinoeta = float(0)
+        #self.a.Define('Neutrino_eta','str(Neutrinoeta)')
+        #self.a.Define('Neutrino_mass',str(Neutrinomass))
+        self.a.AddCutflowColumn(0.0,'Neutrinoeta')
+        self.a.AddCutflowColumn(0.0,'Neutrinomass')
 
         return self.a.GetActiveNode()
     
@@ -113,7 +115,30 @@ class ttbarClass:
         self.a.Define('Bot_vect','hardware::TLvector(Bot_pt, Bot_eta, Bot_phi, Bot_msoftdrop)')
         self.a.Define('Lep_vect','hardware::TLvector(Lepton_pt, Lepton_eta, Lepton_phi, Lepton_mass)')
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
-        self.a.Define('LepCandidate_pt','Bot_pt[0]+Lepton_pt[0]+Neutrino_pt[0]')
         self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
+        #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
+        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Neutrino_pt, Bot_phi, Lepton_phi, Neutrino_phi)')# the total transverse momentum of pt candidate?
+
+        return self.a.GetActiveNode()
+    
+    def Snapshot(self,node=None,colNames=[]):
+        startNode = self.a.GetActiveNode()
+        if node == None: node = self.a.GetActiveNode()
+        #colNames[str]:give what variales to keep at the snapshot
+
+        columns = [
+            'Top_pt',
+            'LepCandidate_pt',
+            'mttbar'
+        ]
+
+        if (len(colNames) > 0):
+            columns.extend(colNames)
+
+        self.a.SetActiveNode(node)
+        self.a.Snapshot(columns,'ttbarsnapshot_%s_%s_%sof%s.root'%(self.setname,self.year,self.ijob,self.njobs),'Events',openOption='RECREATE',saveRunChain=True)
+        self.a.SetActiveNode(startNode)
+
+        
 
 
