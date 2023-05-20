@@ -196,14 +196,14 @@ RVec<float> CreateFloatColumn(int column, RVec<float> CalledColumn){
     return {value};
 }
 
-RVec<int> TwoDCut(int ElectronId, int MuonId, RVec<float> Electron_jetPtRelv2, RVec<float> Muon_jetPtRelv2, float bJet_phi, RVec<float> Electron_phi, RVec<float> Muon_phi){// for some reason, ObjectFromCollection return normal number instead of RVector
+RVec<int> TwoDCut(int LeptonId, int ElectronId, int MuonId, RVec<float> Electron_jetPtRelv2, RVec<float> Muon_jetPtRelv2, float bJet_phi, RVec<float> Electron_phi, RVec<float> Muon_phi){// for some reason, ObjectFromCollection return normal number instead of RVector
     int Crel_pt = -1;//relative pt criteria
     int Crel_phi = -1;//relative phi criteria
     int iElectronId = 0;
     int iMuonId = 0;
     //This selection prioritize the electron over muon. This need to be fixed later.
     //ElectronId = -1 means no electron exist in our system. Do not access any information about electron in this case
-    if (ElectronId > -1){
+    if (LeptonId == 1){
         iElectronId = ElectronId;
         if(Electron_jetPtRelv2[iElectronId] > 25){
             Crel_pt = 1;
@@ -213,7 +213,7 @@ RVec<int> TwoDCut(int ElectronId, int MuonId, RVec<float> Electron_jetPtRelv2, R
         }
     }
     else{
-        if(MuonId > -1){//uncessary since all {-1,-1} have been cut in preselection
+        if(LeptonId == 2){//uncessary since all {-1,-1} have been cut in preselection
             iMuonId = MuonId;
             if(Muon_jetPtRelv2[iMuonId] >25){
                 Crel_pt = 1;
@@ -247,12 +247,12 @@ float GetFloatLeptonProperty(int LeptonId, int ElectronId, int MuonId, RVec<floa
     return LeptonFloat;
 }
 
-float LeptonicCandidatePt(float Bot_pt, float Lepton_pt, float Neutrino_pt, float Bot_phi, float Lepton_phi, float Neutrino_phi){
+float LeptonicCandidatePt(float Bot_pt, float Lepton_pt, float Bot_phi, float Lepton_phi){
     float px = 0;
     float py = 0;
     float pt_tot = 0;
-    px = Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi) + Neutrino_pt * cos(Neutrino_phi);
-    py = Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi) + Neutrino_pt * sin(Neutrino_phi);
+    px = Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi);
+    py = Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi);
     pt_tot = sqrt(px*px + py*py);
     return pt_tot;
 }

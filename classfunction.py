@@ -77,7 +77,7 @@ class ttbarClass:
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
         #self.a.Define('ElectronId','CreateIntColumn(4,DijetIds)')#create a column "electron id" based on the 4th element of DijetIds. Edit: Do not use this. Simply call the relative DijetIds column
         #self.a.Define('MuonId','CreateIntColumn(5,DijetIds)')#create a column for muon as well. Edit: Do not use this. Simply call the relative DijetIds column
-        self.a.Define('Pick2DCut','TwoDCut(DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
+        self.a.Define('Pick2DCut','TwoDCut(DijetIds[2],DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
         self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
         return self.a.GetActiveNode()
     
@@ -116,10 +116,10 @@ class ttbarClass:
         self.a.Define('Lep_vect','hardware::TLvector(Lepton_pt, Lepton_eta, Lepton_phi, Lepton_mass)')
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
         #self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
-        self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect,Neut_vect})')
+        self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
         #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
-	self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect,Neut_vect})')
-        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Neutrino_pt, Bot_phi, Lepton_phi, Neutrino_phi)')# the total transverse momentum of pt candidate?
+        self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect})')#ignore Neutrino for now
+        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Bot_phi, Lepton_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -128,7 +128,8 @@ class ttbarClass:
         #colNames[str]:give what variales to keep at the snapshot
 
         columns = [
-            'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass'
+            'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
+            'Bot_mass'
         ]
 
         if (len(colNames) > 0):
