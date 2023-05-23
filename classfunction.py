@@ -75,16 +75,14 @@ class ttbarClass:
     def Selection(self,Ttagparam):
         self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
-        #self.a.Define('ElectronId','CreateIntColumn(4,DijetIds)')#create a column "electron id" based on the 4th element of DijetIds. Edit: Do not use this. Simply call the relative DijetIds column
-        #self.a.Define('MuonId','CreateIntColumn(5,DijetIds)')#create a column for muon as well. Edit: Do not use this. Simply call the relative DijetIds column
-        self.a.Define('Pick2DCut','TwoDCut(DijetIds[2],DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
+        #self.a.Define('Pick2DCut','TwoDCut(DijetIds[2],DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
+        self.a.Define('Pick2DCut','TwoDCutV2(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt,bJet_pt,Electron_phi,Muon_phi,bJet_phi,Electron_eta,Muon_eta,bJet_eta)')
         self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
         return self.a.GetActiveNode()
     
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
     def JetsCandidateKinematicinfo(self):
         #first give relatvent information of lepton
-        #self.a.Define('LeptonId','CreateColumn(2,DijetIds)')#create the electron/muon indicator Edit: Do not use this. Simply call the relative DijetIds column
         self.a.Define('Lepton_pt','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt)')
         self.a.Define('Lepton_eta','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_eta,Muon_eta)')
         self.a.Define('Lepton_phi','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_phi,Muon_phi)')
@@ -115,10 +113,10 @@ class ttbarClass:
         self.a.Define('Bot_vect','hardware::TLvector(Bot_pt, Bot_eta, Bot_phi, Bot_mass)')
         self.a.Define('Lep_vect','hardware::TLvector(Lepton_pt, Lepton_eta, Lepton_phi, Lepton_mass)')
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
-        #self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
-        self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
+        self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
+        #self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
         #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
-        self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect})')#ignore Neutrino for now
+        self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect,Neut_vect})')#ignore Neutrino for now
         self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Bot_phi, Lepton_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
         return self.a.GetActiveNode()
     
@@ -129,7 +127,7 @@ class ttbarClass:
 
         columns = [
             'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
-            'Bot_mass'
+            'Bot_mass','Bot_pt'
         ]
 
         if (len(colNames) > 0):
