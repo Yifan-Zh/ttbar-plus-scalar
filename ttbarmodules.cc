@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <random> // because TRandom wouldn't work in this case..
-#include <cmath>//need to use the value of pi
+#include <cmath>//need to use the value of pi, and some trig/hyperbolic functions.
 
 using namespace ROOT::VecOps;
 //we want to 1. examine if there's at least a 50GeV lepton 2. If so, find the back to back AK8 and AK4 jets (we know there would at most be one)
@@ -207,7 +207,7 @@ RVec<int> TwoDCutV2(int LeptonId, int ElectronId, int MuonId, RVec<float> Electr
 //lepton pt, eta, phi and mass of the lepton. This function should take in all related value of electron/muon and choose based on the value of Electron/Muon id
 
 float GetFloatLeptonProperty(int LeptonId, int ElectronId, int MuonId, RVec<float> ElectronProperty, RVec<float> MuonProperty){
-    int LeptonIndex = -1;//this parameter will be used to point to lepton properties;
+
     float LeptonFloat = -1.0;//by setting default value to -1 will give us a warning messeage if no lepton satisfying condition exist. Such event should be cut in preselections
     
     if(LeptonId == 1){//this is an electron
@@ -222,12 +222,27 @@ float GetFloatLeptonProperty(int LeptonId, int ElectronId, int MuonId, RVec<floa
     return LeptonFloat;
 }
 
-float LeptonicCandidatePt(float Bot_pt, float Lepton_pt, float Bot_phi, float Lepton_phi){
+float NeutrinoEta(float Lepton_pt, float Lepton_phi, float Lepton_eta, float MET_pt, float MET_phi){//find eta using mass of Wboson
+    float W_mass = 80.4;
+    float Lepton_px = Lepton_pt * cos(Lepton_phi);
+    float Lepton_py = Lepton_pt * sin(Lepton_phi);
+    float Lepton_pz = Lepton_pt * sinh(Lepton_eta);
+    float Lepton_p = Lepton_pt * cosh(Lepton_eta);
+    float MET_px = MET_pt * cos(MET_phi);
+    float MET_py = MET_pt * sin(MET_phi);
+    float Lepton_Esquare = Lepton_p * Lepton_p;// leptons has rest energy on order of MeV, for GeV events lets' pretend they are 0
+    float Lambda = (W_mass * W_mass)/2 + Lepton_px*MET_px + Lepton_py*MET_py;
+    float Neutrino_pz = ((Lambda * Lepton_pz)/(Lepton_pt * Lepton_pt)) - sqrt(pow((Lambda * Lepton_pz)/(Lepton_pt * Lepton_pt),2) - (Lepton_Esquare * MET_pt * MET_pt - Lambda * Lambda)/(Lepton_pt * Lepton_pt));
+    float Neutrino_eta = atanh(Neutrino_pz/sqrt(MET_pt * MET_pt + Neutrino_pz * Neutrino_pz));
+    return Neutrino_eta;
+}
+
+float LeptonicCandidatePt(float Bot_pt, float Lepton_pt, float Bot_phi, float Lepton_phi, float Neutrino_pt, float Neutrino_phi){
     float px = 0;
     float py = 0;
     float pt_tot = 0;
-    px = Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi);
-    py = Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi);
+    px = Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi) + Neutrino_pt * cos(Neutrino_phi);
+    py = Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi) + Neutrino_pt * sin(Neutrino_phi);
     pt_tot = sqrt(px*px + py*py);
     return pt_tot;
 }

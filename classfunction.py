@@ -91,15 +91,15 @@ class ttbarClass:
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
         self.a.ObjectFromCollection('Bot','Jet','DijetIds[1]')
 
-        #for Neutrino
+        #for Neutrino:note, the simple method, assuming eta=0 will not work (because it is not) Need to solve conservation of 3 component of 4-vector
         self.a.Define('Neutrino_pt','MET_pt')
         self.a.Define('Neutrino_phi','MET_phi')
-        #Neutrinomass = float(0)
-        #Neutrinoeta = float(0)
-        #self.a.Define('Neutrino_eta','str(Neutrinoeta)')
-        #self.a.Define('Neutrino_mass',str(Neutrinomass))
-        self.AddCutflowColumn(float(0.0),'Neutrino_eta')
+        #self.AddCutflowColumn(float(0.0),'Neutrino_eta')
+        self.a.Define('Neutrino_eta','NeutrinoEta(Lepton_pt,Lepton_phi,Lepton_eta,MET_pt,MET_phi)')#if someone is reading this, ask Amitav for the paper.
         self.AddCutflowColumn(float(0.0),'Neutrino_mass')
+
+        #it might help to check how many leptons are left in the event
+        self.a.Define('nResultLepton','nElectron + nMuon')
 
         return self.a.GetActiveNode()
     
@@ -117,7 +117,7 @@ class ttbarClass:
         #self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
         #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
         self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect,Neut_vect})')#ignore Neutrino for now
-        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Bot_phi, Lepton_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
+        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Bot_phi, Lepton_phi, Neutrino_pt, Neutrino_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -127,7 +127,7 @@ class ttbarClass:
 
         columns = [
             'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
-            'Bot_mass','Bot_pt'
+            'Bot_mass','Bot_pt','nResultLepton','Neutrino_pt'
         ]
 
         if (len(colNames) > 0):
