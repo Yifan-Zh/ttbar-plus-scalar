@@ -83,10 +83,11 @@ class ttbarClass:
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
     def JetsCandidateKinematicinfo(self):
         #first give relatvent information of lepton
-        self.a.Define('Lepton_pt','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt)')
-        self.a.Define('Lepton_eta','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_eta,Muon_eta)')
-        self.a.Define('Lepton_phi','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_phi,Muon_phi)')
-        self.a.Define('Lepton_mass','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_mass,Muon_mass)')
+        self.a.Define('MyLepton_id','DijetIds[2]')
+        self.a.Define('MyLepton_pt','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt)')
+        self.a.Define('MyLepton_eta','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_eta,Muon_eta)')
+        self.a.Define('MyLepton_phi','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_phi,Muon_phi)')
+        self.a.Define('MyLepton_mass','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_mass,Muon_mass)')
         # we do the same for AK8/4 candidate
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
         self.a.ObjectFromCollection('Bot','Jet','DijetIds[1]')
@@ -95,7 +96,7 @@ class ttbarClass:
         self.a.Define('Neutrino_pt','MET_pt')
         self.a.Define('Neutrino_phi','MET_phi')
         #self.AddCutflowColumn(float(0.0),'Neutrino_eta')
-        self.a.Define('Neutrino_eta','NeutrinoEta(Lepton_pt,Lepton_phi,Lepton_eta,MET_pt,MET_phi)')#if someone is reading this, ask Amitav for the paper.
+        self.a.Define('Neutrino_eta','NeutrinoEta(MyLepton_pt,MyLepton_phi,MyLepton_eta,MET_pt,MET_phi)')#if someone is reading this, ask Amitav for the paper.
         self.AddCutflowColumn(float(0.0),'Neutrino_mass')
 
         #it might help to check how many leptons are left in the event
@@ -111,13 +112,13 @@ class ttbarClass:
     def MassReconstruction(self):
         self.a.Define('Top_vect','hardware::TLvector(Top_pt, Top_eta, Top_phi, Top_msoftdrop)')
         self.a.Define('Bot_vect','hardware::TLvector(Bot_pt, Bot_eta, Bot_phi, Bot_mass)')
-        self.a.Define('Lep_vect','hardware::TLvector(Lepton_pt, Lepton_eta, Lepton_phi, Lepton_mass)')
+        self.a.Define('Lep_vect','hardware::TLvector(MyLepton_pt, MyLepton_eta, MyLepton_phi, MyLepton_mass)')
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
         self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
         #self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
         #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
         self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect,Neut_vect})')#ignore Neutrino for now
-        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, Lepton_pt, Bot_phi, Lepton_phi, Neutrino_pt, Neutrino_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
+        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, MyLepton_pt, Bot_phi, MyLepton_phi, Neutrino_pt, Neutrino_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -127,7 +128,7 @@ class ttbarClass:
 
         columns = [
             'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
-            'Bot_mass','Bot_pt','nResultLepton','Neutrino_pt'
+            'Bot_mass','Bot_pt','nResultLepton','Neutrino_pt','MyLepton_pt','MyLepton_mass','MyLepton_id'
         ]
 
         if (len(colNames) > 0):
