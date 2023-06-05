@@ -66,23 +66,23 @@ class ttbarClass:
     def Preselection(self):
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
-        self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code
+        self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code        
         self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] > -1') #Cut the data according to our standard (FatJet, Jet, Lepton condtion respectively)
+        self.a.Define('bJetFromJets','DijetIds[1]')#take a look at which jet is being selected as the bjet
         return self.a.GetActiveNode()
     
     #now we define the selection according to the following standard: top tagging AK8, and a 2D cut on lepton+b
     def Selection(self,Ttagparam):
         self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
-        #self.a.Define('Pick2DCut','TwoDCut(DijetIds[2],DijetIds[4],DijetIds[5],Electron_jetPtRelv2,Muon_jetPtRelv2,bJet_phi,Electron_phi,Muon_phi)')#creat the boolian parameter for 2D cut using C++ script
         self.a.Define('Pick2DCut','TwoDCutV2(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt,bJet_pt,Electron_phi,Muon_phi,bJet_phi,Electron_eta,Muon_eta,bJet_eta)')
         self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
         return self.a.GetActiveNode()
     
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
     def JetsCandidateKinematicinfo(self):
-        #first give relatvent information of lepton
+        #first give relatvent information of lepton; do not use Lepton_*, will cause a bug in snapshot
         self.a.Define('MyLepton_id','DijetIds[2]')
         self.a.Define('MyLepton_pt','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt)')
         self.a.Define('MyLepton_eta','GetFloatLeptonProperty(DijetIds[2],DijetIds[4],DijetIds[5],Electron_eta,Muon_eta)')
@@ -91,6 +91,18 @@ class ttbarClass:
         # we do the same for AK8/4 candidate
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
         self.a.ObjectFromCollection('Bot','Jet','DijetIds[1]')
+
+        #debug purpose:
+        #self.a.Cut('BotMassCut','Bot_mass < 30')
+        #self.a.Cut('BotIdCut,','DijetIds[1] > 1')#this is based on observation that heavy tail jets in mass distribution are mostly 0th or 1st energetic jet in the system.
+        #more debuging:
+        # find all b quarks, store their mothers' indices and pt
+        self.a.Define("GenB_genPartIdxMother","GenPart_genPartIdxMother[GenPart_pdgId == 5 or GenPart_pdgId == -5]")
+        self.a.Define("GenB_pt","GenPart_pt[GenPart_pdgId ==5 or GenPart_pdgId == -5]")
+        #find mother's PDG IDs
+        self.a.Define("GenB_pdgIdMother","FindMothersPdgId(GenPart_pdgId,GenB_genPartIdxMother)")
+        self.a.Define("GenBfromT_pt","GenB_pt[GenB_pdgIdMother==6]")
+
 
         #for Neutrino:note, the simple method, assuming eta=0 will not work (because it is not) Need to solve conservation of 3 component of 4-vector
         self.a.Define('Neutrino_pt','MET_pt')
@@ -115,10 +127,13 @@ class ttbarClass:
         self.a.Define('Lep_vect','hardware::TLvector(MyLepton_pt, MyLepton_eta, MyLepton_phi, MyLepton_mass)')
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
         self.a.Define('mttbar','hardware::InvariantMass({Top_vect, Bot_vect, Lep_vect, Neut_vect})')#invariant mass of the resonance particle
-        #self.a.Define('mttbar','hardware::InvariantMass({Top_vect,Bot_vect,Lep_vect})')#ignore Neutrino for now
         #for calculate the leptonic candidate, will need phi value of b quark, lepton, and neutrino
         self.a.Define('LepCandidate_mass','hardware::InvariantMass({Bot_vect,Lep_vect,Neut_vect})')#ignore Neutrino for now
-        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, MyLepton_pt, Bot_phi, MyLepton_phi, Neutrino_pt, Neutrino_phi)')# the total transverse momentum of pt candidate? ignore the Neutrino for now
+        self.a.Define('LepCandidate_pt','LeptonicCandidatePt(Bot_pt, MyLepton_pt, Bot_phi, MyLepton_phi, Neutrino_pt, Neutrino_phi)')# the total transverse momentum of pt candidate?
+        self.a.Define('Total_pt','TotalPt(Top_pt,Top_phi,Bot_pt,Bot_phi,MyLepton_pt,MyLepton_phi, Neutrino_pt, Neutrino_phi)')#total pt of hadronic top and leptonic top
+        self.a.Define('deltaMass','abs(Top_msoftdrop-LepCandidate_mass)')#check the difference in invariant mass of two top. They should not be very different.
+        #Debug purpose: get rid of all events where mass difference in two tops are greater than 200GeV
+        self.a.Cut('DeltaMassCut','deltaMass < 100')
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -128,7 +143,10 @@ class ttbarClass:
 
         columns = [
             'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
-            'Bot_mass','Bot_pt','nResultLepton','Neutrino_pt','MyLepton_pt','MyLepton_mass','MyLepton_id'
+            'Bot_mass','Bot_pt','Bot_eta','nResultLepton','Neutrino_pt',
+            'MyLepton_pt','MyLepton_mass','MyLepton_id','MyLepton_eta',
+            'bJetFromJets','GenB_genPartIdxMother','Total_pt',
+            'deltaMass'
         ]
 
         if (len(colNames) > 0):

@@ -246,3 +246,24 @@ float LeptonicCandidatePt(float Bot_pt, float Lepton_pt, float Bot_phi, float Le
     pt_tot = sqrt(px*px + py*py);
     return pt_tot;
 }
+
+float TotalPt(float Top_pt,float Top_phi,float Bot_pt,float Bot_phi,float Lepton_pt,float Lepton_phi,float Neutrino_pt,float Neutrino_phi){
+    float px = 0;
+    float py = 0;
+    float pt_tot = 0;
+    px = Top_pt * cos(Top_phi) + Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi) + Neutrino_pt * cos(Neutrino_phi);
+    py = Top_pt * sin(Top_phi) + Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi) + Neutrino_pt * sin(Neutrino_phi);
+    pt_tot = sqrt(px*px + py*py);
+    return pt_tot;
+}
+
+const ROOT::RVec<int> FindMothersPdgId(const ROOT::RVec<int>& genpart_id, const ROOT::RVec<int>& selected_genpart_mother_indices){
+
+    std::size_t Ni = selected_genpart_mother_indices.size();
+    RVec<int> mother_pdgids(Ni);    
+    for(std::size_t i=0; i<Ni; i++) {
+        mother_pdgids[i] = genpart_id[selected_genpart_mother_indices[i]];
+    }
+    return mother_pdgids;
+
+};
