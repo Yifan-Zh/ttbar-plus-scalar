@@ -63,7 +63,7 @@ histList.append(h13)
 h14 = selection.a.DataFrame.Histo1D(('bJetFromJets','',50,0,10),'bJetFromJets')
 histList.append(h14)
 
-h15 = selection.a.DataFrame.Histo1D(('GenB_genPartIdxMother','',40,0,20),'GenB_genPartIdxMother')
+h15 = selection.a.DataFrame.Histo1D(('GenB_pdgIdMother','',40,-10,10),'GenB_pdgIdMother')
 histList.append(h15)
 
 h16 = selection.a.DataFrame.Histo1D(('Total_pt','',50,0,1000),'Total_pt')
@@ -71,6 +71,15 @@ histList.append(h16)
 
 h17 = selection.a.DataFrame.Histo1D(('Mass Difference in two top candidate','',50,0,1000),'deltaMass')
 histList.append(h17)
+
+h18 = selection.a.DataFrame.Histo1D(('nbJets','',20,0,10),'nbJets')
+histList.append(h18)
+
+h19 = selection.a.DataFrame.Histo1D(('GenB_pt','',50,0,1000),'GenB_pt')
+histList.append(h19)
+
+h20 = selection.a.DataFrame.Histo1D(('Accompanied by jets','',50,-5,5),'Accompanied_by_jets')
+histList.append(h20)
 
 
 c = ROOT.TCanvas('c','c')

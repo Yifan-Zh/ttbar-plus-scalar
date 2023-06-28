@@ -267,3 +267,33 @@ const ROOT::RVec<int> FindMothersPdgId(const ROOT::RVec<int>& genpart_id, const 
     return mother_pdgids;
 
 };
+
+int FindbJets (RVec<float> Jet_TaggerScore){
+    int n = 0;//number count initializer
+    for (int i = 0; i < Jet_TaggerScore.size(); i++){
+        if (Jet_TaggerScore[i] > 0.8){//loose standard tagger score
+            n = n + 1;
+        }
+    }
+    return n;
+}
+
+
+const ROOT::RVec<int> bJetsWithAK4Around(const ROOT::RVec<float>& bquark_pt,const ROOT::RVec<float>& bquark_eta, const ROOT::RVec<float>& bquark_phi, const ROOT::RVec<float>& jet_eta, const ROOT::RVec<float>& jet_phi){
+    std::size_t quarksize = bquark_eta.size();
+    std::size_t jetsize = jet_eta.size();
+    RVec<int> bwithAK4(quarksize);
+    for (std::size_t i = 0; i < quarksize; i++){
+        for (std::size_t j = 0; j < jetsize; j++){
+            if (abs(ROOT::VecOps::DeltaR(bquark_eta[i],jet_eta[j],bquark_phi[i],jet_phi[j])) > 0.4 && bquark_pt[i] > 20){
+                bwithAK4[i] = -1;//if we have a bquark with >20GeV pt, and it does not have AK4 jets accompanying it, then sometihing went off.
+            }
+            else{
+                bwithAK4[i] = 1;//either its pt is so low so we don't care or it actual pass the selection standard.
+                break;//go to next quark
+            }
+        }
+    }
+
+    return bwithAK4;
+}

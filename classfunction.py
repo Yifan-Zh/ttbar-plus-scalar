@@ -95,13 +95,19 @@ class ttbarClass:
         #debug purpose:
         #self.a.Cut('BotMassCut','Bot_mass < 30')
         #self.a.Cut('BotIdCut,','DijetIds[1] > 1')#this is based on observation that heavy tail jets in mass distribution are mostly 0th or 1st energetic jet in the system.
-        #more debuging:
-        # find all b quarks, store their mothers' indices and pt
+        #more debuging: GenMatching
+        # find all b quarks, store their mothers' indices and kinematics
         self.a.Define("GenB_genPartIdxMother","GenPart_genPartIdxMother[GenPart_pdgId == 5 or GenPart_pdgId == -5]")
         self.a.Define("GenB_pt","GenPart_pt[GenPart_pdgId ==5 or GenPart_pdgId == -5]")
+        self.a.Define("GenB_eta","GenPart_eta[GenPart_pdgId ==5 or GenPart_pdgId == -5]")
+        self.a.Define("GenB_phi","GenPart_phi[GenPart_pdgId ==5 or GenPart_pdgId == -5]")
         #find mother's PDG IDs
         self.a.Define("GenB_pdgIdMother","FindMothersPdgId(GenPart_pdgId,GenB_genPartIdxMother)")
-        self.a.Define("GenBfromT_pt","GenB_pt[GenB_pdgIdMother==6]")
+        self.a.Define("GenBfromT_pt","GenB_pt[GenB_pdgIdMother==6 or GenPart_pdgId == -6]")
+        #find number of bJets in the system:
+        self.a.Define("nbJets","FindbJets(Jet_btagCSVV2)")
+        #find whether all b quarks are accompanied by some AK4 jet in the system
+        self.a.Define("Accompanied_by_jets","bJetsWithAK4Around(GenB_pt,GenB_eta,GenB_phi,GenJet_eta,GenJet_phi)")
 
 
         #for Neutrino:note, the simple method, assuming eta=0 will not work (because it is not) Need to solve conservation of 3 component of 4-vector
@@ -133,7 +139,7 @@ class ttbarClass:
         self.a.Define('Total_pt','TotalPt(Top_pt,Top_phi,Bot_pt,Bot_phi,MyLepton_pt,MyLepton_phi, Neutrino_pt, Neutrino_phi)')#total pt of hadronic top and leptonic top
         self.a.Define('deltaMass','abs(Top_msoftdrop-LepCandidate_mass)')#check the difference in invariant mass of two top. They should not be very different.
         #Debug purpose: get rid of all events where mass difference in two tops are greater than 200GeV
-        self.a.Cut('DeltaMassCut','deltaMass < 100')
+        #self.a.Cut('DeltaMassCut','deltaMass < 100')
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -145,8 +151,8 @@ class ttbarClass:
             'Top_pt','Top_msoftdrop','mttbar','LepCandidate_pt','LepCandidate_mass',
             'Bot_mass','Bot_pt','Bot_eta','nResultLepton','Neutrino_pt',
             'MyLepton_pt','MyLepton_mass','MyLepton_id','MyLepton_eta',
-            'bJetFromJets','GenB_genPartIdxMother','Total_pt',
-            'deltaMass'
+            'bJetFromJets','GenB_pdgIdMother','Total_pt',
+            'deltaMass','nbJets','GenB_pt','Accompanied_by_jets'
         ]
 
         if (len(colNames) > 0):
