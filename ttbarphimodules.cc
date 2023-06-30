@@ -48,7 +48,7 @@ RVec<int> FindLeadLepton(RVec<float> Electron_pt, RVec<float> Muon_pt){
         LeptonIndex[Muon_pt[i]] = std::make_pair(i,2);//(i,2) stand for element of muons
     }
 
-    RVec<float> Lepton_pt (Electron_pt.size() + Muon_pt.size());
+    std::vector<float> Lepton_pt (Electron_pt.size() + Muon_pt.size());
 
     for (int i = 0; i < Electron_pt.size(); i++){
         Lepton_pt[i] = Electron_pt[i];
@@ -238,7 +238,6 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
     int PassPairCheck = 0;
     int PassScalarMassCut = 0;
     int PassRelativePhi = 0;
-    int PassJetRelativePhi = 0;
     float PhiLepton1Phi;
     float PhiLepton2Phi;
     ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(0,0,0,0);
@@ -254,10 +253,10 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
     int LowerDeltaPhiPair;
 
     if (LeadLeptonInfo[0] == LeadLeptonInfo [1] && LeadLeptonInfo[1] == LeadLeptonInfo[2]){//three same lepton
-        bool ThreeSameLepton = true;
+        ThreeSameLepton = true;
     }
     else{
-        bool ThreeSameLepton = false;
+        ThreeSameLepton = false;
     }
     //let's work out the different case first.
     if (ThreeSameLepton == false){
@@ -310,16 +309,16 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
     
         //construct the TLvector for these two leptons and then compute their invariant mass.
         if (PhiLeptonType1 == 1){
-            ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
+            PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
         }
         else{
-            ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
+            PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
         }
         if (PhiLeptonType2 == 1){
-            ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
+            PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
         }
         else{
-            ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
+            PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
         }
 
         if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
@@ -400,16 +399,16 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
                 //now, check if the remaining two can give a invariant mass < 20 GeV
                 //construct the TLvector for these two leptons and then compute their invariant mass.
                 if (PhiLeptonType1 == 1){
-                    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
+                    PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
                 }
                 else{
-                    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
+                    PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
                 }
                 if (PhiLeptonType2 == 1){
-                    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
+                    PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
                 }
                 else{
-                    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
+                    PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
                 }
 
                 if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
@@ -484,16 +483,16 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
                 //now, check if the remaining two can give a invariant mass < 20 GeV
                 //construct the TLvector for these two leptons and then compute their invariant mass.
                 if (PhiLeptonType1 == 1){
-                    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
+                    PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
                 }
                 else{
-                    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
+                    PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
                 }
                 if (PhiLeptonType2 == 1){
-                    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
+                    PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
                 }
                 else{
-                    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
+                    PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
                 }
 
                 if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
@@ -524,7 +523,7 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
                     PassRelativePhi = 0;
                 }
 
-                if (PassPairCheck == 1 && Pass2DCut == 1 && PassScalarMassCut == 1 && PassRelativePhi == 1 && PassJetRelativePhi == 1){
+                if (PassPairCheck == 1 && Pass2DCut == 1 && PassScalarMassCut == 1 && PassRelativePhi == 1){
                     //Pass all the test
                     PassAllTest = 1;
                 }
@@ -532,7 +531,6 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
             }
         }
     }
-
     return {PassAllTest, TopLepton, LeptonPairId[0], LeptonPairId[1]};
 }
 

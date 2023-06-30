@@ -69,15 +69,17 @@ class ttbarphiClass:
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code        
         self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId}. We demand at least one AK4Jet is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1') #Cut the data according to our standard (FatJet, Jet condtion respectively)
-        self.a.Define('bJetFromJets','DijetIds[1]')#take a look at which jet is being selected as the bjet
-        self.a.Define('nResultLepton','nElectron + nMuon')#since we have a light scalar decay into two lepton, we should have at least 3 lepton
-        self.a.Cut('LeptonNumberCut','nResultLepton > 2')
+
+        self.a.Define('nTotalLepton','nElectron + nMuon')#since we have a light scalar decay into two lepton, we should have at least 3 lepton
+        self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
         #for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
         self.a.Define('LeadingThreeLepton','FindLeadLepton(Electron_pt,Muon_pt)')
         # make sure the least energetic one have at least 50 GeV
         self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[2],LeadingThreeLepton[5])')
         self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
+        self.a.DataFrame.Count().GetValue()
+        print ("Pass Preselection stage")
         return self.a.GetActiveNode()
     
     #now we define the selection according to the following standard: top tagging AK8, identify which lepton come from t decay and a 2D cut on lepton+b
@@ -92,16 +94,19 @@ class ttbarphiClass:
         self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the 2 jets for 2D cut analysis purposes
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
+        self.a.DataFrame.Count().GetValue()
+        print ("Pass TopTagging")
         #now we start to handle the leptons. We'll handle this part in c++
         self.a.Define('LeptonTestAndReOrdering','LeptonCategorize(LeadingThreeLepton,Electron_pt,Muon_pt,bJet_pt,Electron_phi,Muon_phi,bJet_phi,Electron_eta,Muon_eta,bJet_eta,Electron_charge,Muon_charge)')
         self.a.Cut('PassAllExceptJetRelAngle','LeptonTestAndReOrdering[0] == 1')
+        self.a.DataFrame.Count().GetValue()
+        print ("Pass selection stage")
         return self.a.GetActiveNode()
     
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
     def JetsCandidateKinematicinfo(self):
         #first give relatvent information of lepton; do not use Lepton_*, will cause a bug in snapshot
         #we now define the kinematics variables of the three lepton. The one from W followed by ones from phi
-        self.a.Define('WLepton_id','DijetIds[2]')
         self.a.Define('WLepton_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + 3],Electron_pt,Muon_pt)')
         self.a.Define('WLepton_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + 3],Electron_eta,Muon_eta)')
         self.a.Define('WLepton_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + 3],Electron_phi,Muon_phi)')
@@ -124,7 +129,6 @@ class ttbarphiClass:
         #for Neutrino:note, the simple method, assuming eta=0 will not work (because it is not) Need to solve conservation of 3 component of 4-vector
         self.a.Define('Neutrino_pt','MET_pt')
         self.a.Define('Neutrino_phi','MET_phi')
-        #self.AddCutflowColumn(float(0.0),'Neutrino_eta')
         self.a.Define('Neutrino_eta','NeutrinoEta(WLepton_pt,WLepton_phi,WLepton_eta,MET_pt,MET_phi)')#if someone is reading this, ask Amitav for the paper.
         self.AddCutflowColumn(float(0.0),'Neutrino_mass')
 
@@ -144,12 +148,11 @@ class ttbarphiClass:
         self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
 
         #Cut if the reconstructed phi is far away from both jets
-        self.a.Define('LeptonicTop_vect','Bot_vect + WLep_vect + Neut_vect')
+        self.a.Define('LeptonicTop_vect','Bot_vect + WLep_vect + Neut_vect')#Neutrino removed
         self.a.Define('Phi_vect','PhiLep1_vect + PhiLep2_vect')
         self.a.Cut('CloseToEitherOfTop','(abs(hardware::DeltaPhi(Phi_vect.Phi(),LeptonicTop_vect.Phi())) < 0.785) || (abs(hardware::DeltaPhi(Phi_vect.Phi(),HadronicTop_vect.Phi())) < 0.785)')
 
-        #self.a.Define('mttbar','hardware::InvariantMass({HadronicTop_vect, Bot_vect, WLep_vect, Neut_vect,PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
-        self.a.Define('mttbar','hardware::InvariantMass({HadronicTop_vect, Bot_vect, WLep_vect, Neut_vect})')
+        self.a.Define('mttbar','hardware::InvariantMass({HadronicTop_vect, Bot_vect, WLep_vect, Neut_vect,PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
