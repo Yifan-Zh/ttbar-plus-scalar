@@ -10,7 +10,7 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-selection = ttbarphiClass('ttbar-semilep_17.root',17,1,1)
+selection = ttbarphiClass('ttbarphi-all_18.txt',18,1,1)
 selection.Preselection()
 selection.Selection(0.8)
 selection.JetsCandidateKinematicinfo()
@@ -21,7 +21,7 @@ print ('%s sec'%(time.time()-start))
 
 histList = []
 
-h1 = selection.a.DataFrame.Histo1D(('mttbar','',50,0,3000),'mttbar')
+h1 = selection.a.DataFrame.Histo1D(('mttbar','',100,0,10000),'mttbar')
 histList.append(h1)
 
 c = ROOT.TCanvas('c','c')

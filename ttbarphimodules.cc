@@ -14,7 +14,7 @@ using namespace ROOT::VecOps;
 //Problem left to fix: modify the code to pick to most energetic lepton
 
 
-RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> Jet_btagCMVA){
+RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> Jet_btagCMVA, RVec<float> FatJet_particleNet_TvsQCD){
     int FatJetidx = -1;
     int Jetidx = -1;
     bool exitLeptonloop = false;
@@ -22,7 +22,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
 
     for (int iJet = 0; iJet < Jet_phi.size() && exitJetloop ==false; iJet++){//find the back to back jets
         for (int iFatJet =0; iFatJet < FatJet_phi.size(); iFatJet++){
-            if (abs(hardware::DeltaPhi(FatJet_phi[iFatJet],Jet_phi[iJet])) > M_PI/2 && Jet_btagCMVA[iJet] > 0.8){
+            if (abs(hardware::DeltaPhi(FatJet_phi[iFatJet],Jet_phi[iJet])) > M_PI/2 && Jet_btagCMVA[iJet] > 0.8 && FatJet_particleNet_TvsQCD[iFatJet] > 0.8){
                 FatJetidx = iFatJet;
                 Jetidx = iJet;
                 exitJetloop =true;
@@ -321,7 +321,7 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
             PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
         }
 
-        if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
+        if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 40){
             PassScalarMassCut = 1;
         }
 
@@ -411,7 +411,7 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
                     PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
                 }
 
-                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
+                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 40){
                     PassScalarMassCut = 1;
                 }
 
@@ -495,7 +495,7 @@ RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RV
                     PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
                 }
 
-                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 20){
+                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 40){
                     PassScalarMassCut = 1;
                 }
 

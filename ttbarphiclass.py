@@ -67,7 +67,7 @@ class ttbarphiClass:
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code        
-        self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId}. We demand at least one AK4Jet is b-tagged.
+        self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Jet_btagCSVV2,FatJet_particleNet_TvsQCD)') #Output: Jet selection parameter of the form{FatJetId,JetId}. We demand at least one AK4Jet is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1') #Cut the data according to our standard (FatJet, Jet condtion respectively)
 
         self.a.Define('nTotalLepton','nElectron + nMuon')#since we have a light scalar decay into two lepton, we should have at least 3 lepton
@@ -76,8 +76,9 @@ class ttbarphiClass:
         #for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
         self.a.Define('LeadingThreeLepton','FindLeadLepton(Electron_pt,Muon_pt)')
         # make sure the least energetic one have at least 50 GeV
-        self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[2],LeadingThreeLepton[5])')
-        self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
+        self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[0],LeadingThreeLepton[3])')
+        #Debugging: the pt constraint might be too tight
+        #self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
         self.a.DataFrame.Count().GetValue()
         print ("Pass Preselection stage")
         return self.a.GetActiveNode()
@@ -91,7 +92,8 @@ class ttbarphiClass:
     # {pass selection or not, which one comes from top, which ones come from phi}
     #the "close to jet test" will be postponed to after reconstruction. Otherwise we will have to reconstruct the object twice.
     def Selection(self,Ttagparam):
-        self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
+        #top tagging combined in 2DCut.
+        #self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the 2 jets for 2D cut analysis purposes
         self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
         self.a.DataFrame.Count().GetValue()
@@ -150,7 +152,9 @@ class ttbarphiClass:
         #Cut if the reconstructed phi is far away from both jets
         self.a.Define('LeptonicTop_vect','Bot_vect + WLep_vect + Neut_vect')#Neutrino removed
         self.a.Define('Phi_vect','PhiLep1_vect + PhiLep2_vect')
-        self.a.Cut('CloseToEitherOfTop','(abs(hardware::DeltaPhi(Phi_vect.Phi(),LeptonicTop_vect.Phi())) < 0.785) || (abs(hardware::DeltaPhi(Phi_vect.Phi(),HadronicTop_vect.Phi())) < 0.785)')
+
+        #Demand close to either of the top:
+        #self.a.Cut('CloseToEitherOfTop','(abs(hardware::DeltaPhi(Phi_vect.Phi(),LeptonicTop_vect.Phi())) < 0.785) || (abs(hardware::DeltaPhi(Phi_vect.Phi(),HadronicTop_vect.Phi())) < 0.785)')
 
         self.a.Define('mttbar','hardware::InvariantMass({HadronicTop_vect, Bot_vect, WLep_vect, Neut_vect,PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         return self.a.GetActiveNode()
