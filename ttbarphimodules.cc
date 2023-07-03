@@ -10,22 +10,20 @@
 #include <utility>
 
 using namespace ROOT::VecOps;
-//we want to 1. examine if there's at least a 50GeV lepton 2. If so, find the back to back AK8 and AK4 jets (we know there would at most be one)
-//Problem left to fix: modify the code to pick to most energetic lepton
+
 
 
 RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> Jet_btagCMVA, RVec<float> FatJet_particleNet_TvsQCD){
     int FatJetidx = -1;
     int Jetidx = -1;
-    bool exitLeptonloop = false;
-    bool exitJetloop = false;
+    bool exitFatJetloop = false;
 
-    for (int iJet = 0; iJet < Jet_phi.size() && exitJetloop ==false; iJet++){//find the back to back jets
-        for (int iFatJet =0; iFatJet < FatJet_phi.size(); iFatJet++){
-            if (abs(hardware::DeltaPhi(FatJet_phi[iFatJet],Jet_phi[iJet])) > M_PI/2 && Jet_btagCMVA[iJet] > 0.8 && FatJet_particleNet_TvsQCD[iFatJet] > 0.8){
+    for (int iFatJet =0; iFatJet < FatJet_phi.size() && exitFatJetloop == false;iFatJet++){//find the back to back Fatjet and jets
+        for (int iJet = 0; iJet < Jet_phi.size();iJet++){
+            if ((abs(hardware::DeltaPhi(FatJet_phi[iFatJet],Jet_phi[iJet])) > M_PI/2) && Jet_btagCMVA[iJet] > 0.8 && FatJet_particleNet_TvsQCD[iFatJet] > 0.8){
                 FatJetidx = iFatJet;
                 Jetidx = iJet;
-                exitJetloop =true;
+                exitFatJetloop = true;
                 break;
             }
         }
@@ -38,7 +36,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
 //Code assisted by Xianglong Wang
 //this method can fail if multiple lepton have same velocity. This is supposed to be extremely unlikely
 RVec<int> FindLeadLepton(RVec<float> Electron_pt, RVec<float> Muon_pt){
-    //(Leptonpt,(i,j)),i indicate its position inside the vector, j indicate which vector it belongs to
+    //(Leptonpt,(i,j)),i indicate its position inside the Rvector, j indicate which Rvector it belongs to
     std::map<float, std::pair<int, int>> LeptonIndex;
     for (int i = 0; i < Electron_pt.size(); i++){
         LeptonIndex[Electron_pt[i]] = std::make_pair(i,1);//(i,1) stand for element of electrons

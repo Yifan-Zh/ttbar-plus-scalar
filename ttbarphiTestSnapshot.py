@@ -21,7 +21,7 @@ print ('%s sec'%(time.time()-start))
 
 histList = []
 
-h1 = selection.a.DataFrame.Histo1D(('mttbar','',100,0,10000),'mttbar')
+h1 = selection.a.DataFrame.Histo1D(('mttbar','',100,0,3000),'mttbar')
 histList.append(h1)
 
 c = ROOT.TCanvas('c','c')

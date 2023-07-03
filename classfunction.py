@@ -61,15 +61,30 @@ class ttbarClass:
         print('Adding cutflow information....\n\t{}\t{}'.format(varName, var))
         self.a.Define('{}'.format(varName), str(var))
 
+    def getNweighted(self):
+        if not self.a.isData:
+            return self.a.DataFrame.Sum("genWeight").GetValue()
+        else:
+            return self.a.DataFrame.Count().GetValue()
+
+
     # preselection we apply are the following:
     # we first want to mark all the event with:
     def Preselection(self):
+        self.NPROC = self.getNweighted()
+        self.AddCutflowColumn(self.NPROC,"NPROC")
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
+        self.NFATJETS = self.getNweighted()
+        self.AddCutflowColumn(self.NFATJETS,"NFATJETS")
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
+        self.NJETS = self.getNweighted()
+        self.AddCutflowColumn(self.NJETS,"NJETS")
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code        
         self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] > -1') #Cut the data according to our standard (FatJet, Jet, Lepton condtion respectively)
         self.a.Define('bJetFromJets','DijetIds[1]')#take a look at which jet is being selected as the bjet
+        self.NPreselection = self.getNweighted()
+        self.AddCutflowColumn(self.NPreselection,"NPreselection")
         return self.a.GetActiveNode()
     
     #now we define the selection according to the following standard: top tagging AK8, and a 2D cut on lepton+b
@@ -78,6 +93,8 @@ class ttbarClass:
         self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the b jet for 2D cut analysis purposes
         self.a.Define('Pick2DCut','TwoDCutV2(DijetIds[2],DijetIds[4],DijetIds[5],Electron_pt,Muon_pt,bJet_pt,Electron_phi,Muon_phi,bJet_phi,Electron_eta,Muon_eta,bJet_eta)')
         self.a.Cut('2DCut','Pick2DCut[0] == 1 || Pick2DCut[1] == 1')#if either condition is met, we keep the event.
+        self.NSelection = self.getNweighted()
+        self.AddCutflowColumn(self.NSelection,"NSelection")
         return self.a.GetActiveNode()
     
     #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
