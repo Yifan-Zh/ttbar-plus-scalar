@@ -68,33 +68,32 @@ class ttbarphiClass:
             return self.a.DataFrame.Count().GetValue()
 
 
-    # preselection we apply are the following:
+    # this is the preselection for non-boosted case. In this case DO NOT use top tagger (it won't work)
     # we first want to mark all the event with:
     def Preselection(self):
         self.NPROC = self.getNweighted()
         self.AddCutflowColumn(self.NPROC,"NPROC")
-        self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
-        self.NFATJETS = self.getNweighted()
-        self.AddCutflowColumn(self.NFATJETS,"NFATJETS")
-        self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
+        #we need either:at least 1 AK8 + 1 AK4, or at least 3 AK4 jet For a semileptonic decay.
+        self.a.Cut('nFatJet','(nFatJet > 0 && nJet > 0) || (nJet > 2)')
         self.NJETS = self.getNweighted()
         self.AddCutflowColumn(self.NJETS,"NJETS")
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist
-       
-        self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Jet_btagCSVV2,FatJet_particleNet_TvsQCD)') #Output: Jet selection parameter of the form{FatJetId,JetId}. We demand at least one AK4Jet is b-tagged.
-        self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1') #Cut the data according to our standard (Back to back AK8 and AK4 Jet)
-        self.NDijetCut = self.getNweighted()
-        self.AddCutflowColumn(self.NDijetCut,"NDijetCut")    
 
-        self.a.Define('nTotalLepton','nElectron + nMuon')#since we have a light scalar decay into two lepton, we should have at least 3 lepton
+        #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
+        #since we have a light scalar decay into two lepton, we should have at least 3 isolatedlepton
+        #Debug purpse:
+        #self.a.Cut('testLeptonCut','nElectron == 1 && nMuon == 2')
+
+
+        self.a.Define('nTotalLepton','nElectron + nMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
         self.NLeptons = self.getNweighted()
         self.AddCutflowColumn(self.NLeptons,"NLeptons")         
 
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
-        #for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
+        # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
         self.a.Define('LeadingThreeLepton','FindLeadLepton(Electron_pt,Muon_pt)')
-        # make sure the most energetic one have at least 50 GeV
+        # make sure the least energetic one have at least 25 GeV
         self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[0],LeadingThreeLepton[3])')
         #Debugging: the pt constraint might be too tight
         self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
@@ -103,25 +102,15 @@ class ttbarphiClass:
         print ("Pass Preselection stage")
         return self.a.GetActiveNode()
     
-    #now we define the selection according to the following standard: top tagging AK8, identify which lepton come from t decay and a 2D cut on lepton+b
-    #the 2 general cases are: 3 same lepton/1 electron 2 muon or vice versa
-    #in the second case, the singled one must come from a leptonic top decay, and thus must satisfy the 2Dcut standard. The other two should move in the same direction and close to AK8/4 Jets with a relatively small invariant mass
-    #in the first case, it's more complicated, we'd like to have a couple conditions satisfied simultaneously:
-    # the particle-antiparticle pair cloest to each other will be reconstructed as phi, they need to satisfy the same condition as in the second case.
-    # we want the output to carry the following information:
-    # {pass selection or not, which one comes from top, which ones come from phi}
-    #the "close to jet test" will be postponed to after reconstruction. Otherwise we will have to reconstruct the object twice.
-    def Selection(self,Ttagparam):
-        #top tagging combined in 2DCut.
-        #self.a.Cut('TopTagging','FatJet_particleNet_TvsQCD[DijetIds[0]] > {}'.format(Ttagparam))
-        self.a.ObjectFromCollection('bJet','Jet','DijetIds[1]')#isolate the 2 jets for 2D cut analysis purposes
-        self.a.ObjectFromCollection('Top','FatJet','DijetIds[0]')
-        print ("Pass TopTagging")
+
+    def Selection(self):
+
         #now we start to handle the leptons. We'll handle this part in c++
-        self.a.Define('LeptonTestAndReOrdering','LeptonCategorize(LeadingThreeLepton,Electron_pt,Muon_pt,bJet_pt,Electron_phi,Muon_phi,bJet_phi,Electron_eta,Muon_eta,bJet_eta,Electron_charge,Muon_charge)')
-        self.a.Cut('PassAllExceptJetRelAngle','LeptonTestAndReOrdering[0] == 1')
-        self.NPassAllSelectionExceptJetRelPhi = self.getNweighted()
-        self.AddCutflowColumn(self.NPassAllSelectionExceptJetRelPhi,"NPassAllSelectionExceptJetRelPhi")  
+        #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
+        self.a.Define('LeptonTestAndReOrdering','LeptonCategorize(LeadingThreeLepton,Electron_pt,Muon_pt,Electron_phi,Muon_phi,Electron_eta,Muon_eta,Electron_charge,Muon_charge)')
+        self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
+        self.NPassAllSelection = self.getNweighted()
+        self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
         print ("Pass selection stage")
         return self.a.GetActiveNode()
     
@@ -144,15 +133,6 @@ class ttbarphiClass:
         self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[3]],LeadingThreeLepton[LeptonTestAndReOrdering[3] + 3],Electron_phi,Muon_phi)')
         self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[3]],LeadingThreeLepton[LeptonTestAndReOrdering[3] + 3] ,Electron_mass,Muon_mass)')
 
-        # we do the same for b quark jet candidate
-        self.a.ObjectFromCollection('Bot','Jet','DijetIds[1]')
-
-
-        #for Neutrino:note, the simple method, assuming eta=0 will not work (because it is not) Need to solve conservation of 3 component of 4-vector
-        self.a.Define('Neutrino_pt','MET_pt')
-        self.a.Define('Neutrino_phi','MET_phi')
-        self.a.Define('Neutrino_eta','NeutrinoEta(WLepton_pt,WLepton_phi,WLepton_eta,MET_pt,MET_phi)')#if someone is reading this, ask Amitav for the paper.
-        self.AddCutflowColumn(float(0.0),'Neutrino_mass')
 
         return self.a.GetActiveNode()
     
@@ -162,23 +142,13 @@ class ttbarphiClass:
     #leptonic candidate: need information from btaggedAK4, Lepton, and MET. Assume 0 mass nutrino, moves in xy plane only so eta =0.
 
     def MassReconstruction(self):
-        self.a.Define('HadronicTop_vect','hardware::TLvector(Top_pt, Top_eta, Top_phi, Top_msoftdrop)')
-        self.a.Define('Bot_vect','hardware::TLvector(Bot_pt, Bot_eta, Bot_phi, Bot_mass)')
-        self.a.Define('WLep_vect','hardware::TLvector(WLepton_pt, WLepton_eta, WLepton_phi, WLepton_mass)')
-        self.a.Define('PhiLep1_vect','hardware::TLvector(PhiLepton1_pt,PhiLepton2_eta,PhiLepton1_phi,PhiLepton1_mass)')
+
+        self.a.Define('PhiLep1_vect','hardware::TLvector(PhiLepton1_pt,PhiLepton1_eta,PhiLepton1_phi,PhiLepton1_mass)')
         self.a.Define('PhiLep2_vect','hardware::TLvector(PhiLepton2_pt,PhiLepton2_eta,PhiLepton2_phi,PhiLepton2_mass)')
-        self.a.Define('Neut_vect','hardware::TLvector(Neutrino_pt, Neutrino_eta, Neutrino_phi, Neutrino_mass)')
-
-        #Cut if the reconstructed phi is far away from both jets
-        self.a.Define('LeptonicTop_vect','Bot_vect + WLep_vect + Neut_vect')#Neutrino removed
-        self.a.Define('Phi_vect','PhiLep1_vect + PhiLep2_vect')
-
-        #Demand close to either of the top:
-        self.a.Cut('CloseToEitherOfTop','(abs(hardware::DeltaPhi(Phi_vect.Phi(),LeptonicTop_vect.Phi())) < 0.785) || (abs(hardware::DeltaPhi(Phi_vect.Phi(),HadronicTop_vect.Phi())) < 0.785)')
-        self.NPassAllSelection = self.getNweighted()
-        self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
-
-        self.a.Define('mttbar','hardware::InvariantMass({HadronicTop_vect, Bot_vect, WLep_vect, Neut_vect,PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
+ 
+        self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
+        self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
+        #self.a.Cut('LeptonOnly','LeptonTestAndReOrdering[2] == 0')
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -187,8 +157,8 @@ class ttbarphiClass:
         #colNames[str]:give what variales to keep at the snapshot
 
         columns = [
-            'mttbar',
-            'NPROC','NFATJETS','NJETS','NPreselection','NLeptons'
+            'PhiInvMass','WhichLepton',
+            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass'
         ]
 
         if (len(colNames) > 0):

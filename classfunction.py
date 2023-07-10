@@ -73,14 +73,17 @@ class ttbarClass:
     def Preselection(self):
         self.NPROC = self.getNweighted()
         self.AddCutflowColumn(self.NPROC,"NPROC")
+
         self.a.Cut('nFatJet','nFatJet > 0')# at least 1 AK8 jet
-        self.NFATJETS = self.getNweighted()
+        self.NFATJETS = self.getNweighted()        
         self.AddCutflowColumn(self.NFATJETS,"NFATJETS")
+
         self.a.Cut('nJet','nJet > 0') # at least 1 AK4 jet
         self.NJETS = self.getNweighted()
         self.AddCutflowColumn(self.NJETS,"NJETS")
+
         self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist. Save some effort in c++ code        
-        self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCSVV2)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
+        self.a.Define('DijetIds','PickDijetsV2(FatJet_phi,Jet_phi,Electron_pt,Muon_pt,Jet_btagCSVV2,Electron_miniPFRelIso_all,Muon_miniPFRelIso_all)') #Output: Jet selection parameter of the form{FatJetId,JetId,Leptonid,Leptonpt,ElectronId,MuonId}. We demand lepton pt>50GeV, at least one AK4Jet(named Jet) is b-tagged.
         self.a.Cut('preselected','DijetIds[0]> -1 && DijetIds[1] > -1 && DijetIds[2] > -1') #Cut the data according to our standard (FatJet, Jet, Lepton condtion respectively)
         self.a.Define('bJetFromJets','DijetIds[1]')#take a look at which jet is being selected as the bjet
         self.NPreselection = self.getNweighted()

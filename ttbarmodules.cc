@@ -10,7 +10,7 @@ using namespace ROOT::VecOps;
 //Problem left to fix: modify the code to pick to most energetic lepton
 
 
-RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Jet_btagCMVA){
+RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Jet_btagCMVA, RVec<float> Electron_miniPFRelIso_all, RVec<float> Muon_miniPFRelIso_all){
     int FatJetidx = -1;
     int Jetidx = -1;
     int Leptonidx = -1;
@@ -25,7 +25,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
         if (Muon_pt.size() < 1){Leptonidx = -1;}
         else {
             for (int iMuon = 0; iMuon < Muon_pt.size(); iMuon++){//no electron, but have muon
-                if (Muon_pt[iMuon]>50){
+                if (Muon_pt[iMuon]>50 && Muon_miniPFRelIso_all[iMuon] < 0.4){
                     Muonidx = iMuon;//give the first Muon sastifying our condition
                     Leptonidx = 2;//represent Muon as 2
                     Leptonpt = Muon_pt[iMuon];//The momentum of lepton is given by this muon
@@ -49,7 +49,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
     else {
         if (Muon_pt.size() < 1){//no muon, but have electron
             for (int iElectron = 0; iElectron < Electron_pt.size(); iElectron++){
-                if (Electron_pt[iElectron]>50){
+                if (Electron_pt[iElectron]>50 && Electron_miniPFRelIso_all[iElectron] < 0.4){
                     Electronidx = iElectron;//give the first Electron sastifying our condition
                     Leptonidx = 1;//represent Electron as 1
                     Leptonpt = Electron_pt[iElectron];//momentum is given by electron
@@ -72,7 +72,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
         else {//both exsit
             for(int iElectron = 0; iElectron < Electron_pt.size() && exitLeptonloop == false; iElectron++){
                 for (int iMuon = 0; iMuon < Muon_pt.size(); iMuon++){
-                    if(Electron_pt[iElectron]>Muon_pt[iMuon] && Electron_pt[iElectron] > 50){
+                    if(Electron_pt[iElectron]>Muon_pt[iMuon] && Electron_pt[iElectron] > 50 && Electron_miniPFRelIso_all[iElectron] < 0.4){
                         Electronidx = iElectron;
                         Muonidx = iMuon;
                         Leptonidx = 1;
@@ -90,7 +90,7 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
                         break;
                     }
                     else{
-                        if(Muon_pt[iMuon]>Electron_pt[iElectron] && Muon_pt[iMuon] > 50){
+                        if(Muon_pt[iMuon]>Electron_pt[iElectron] && Muon_pt[iMuon] > 50 && Muon_miniPFRelIso_all[iMuon] < 0.4){
                             Electronidx = iElectron;
                             Muonidx = iMuon;
                             Leptonidx = 2;
