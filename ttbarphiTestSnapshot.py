@@ -10,7 +10,7 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-selection = ttbarphiClass('ttbarphi-all_18.txt',18,1,1)
+selection = ttbarphiClass('ttbarphi-signal_18.txt',18,1,1)
 selection.Preselection()
 selection.Selection()
 selection.JetsCandidateKinematicinfo()

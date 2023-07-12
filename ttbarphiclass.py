@@ -14,7 +14,7 @@ class ttbarphiClass:
 	    # there is an issue with empty events TTrees, so make sure they don't make it through to the analyzer (mainly seen in V+Jets, esp at low HT)
             invalidFiles = []
             for iFile in infiles:
-		#print('Adding {} to Analyzer'.format(iFile))
+                print('Adding {} to Analyzer'.format(iFile))
                 f = ROOT.TFile.Open(iFile)
                 if not f.Get('Events'):
                     print('\tWARNING: {} has no Events TTree - will not be added to analyzer'.format(iFile))
@@ -82,7 +82,7 @@ class ttbarphiClass:
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
         #since we have a light scalar decay into two lepton, we should have at least 3 isolatedlepton
         #Debug purpse:
-        #self.a.Cut('testLeptonCut','nElectron == 1 && nMuon == 2')
+        #self.a.Cut('testLeptonCut','nElectron == 1')
 
 
         self.a.Define('nTotalLepton','nElectron + nMuon')
@@ -148,7 +148,7 @@ class ttbarphiClass:
  
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
-        #self.a.Cut('LeptonOnly','LeptonTestAndReOrdering[2] == 0')
+        self.a.Cut('WhateverDebugThisIs','LeadingThreeLepton[LeptonTestAndReOrdering[2]] == 2')
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
