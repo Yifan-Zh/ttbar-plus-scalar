@@ -57,8 +57,24 @@ RVec<int> FindLeadLepton(RVec<float> Electron_pt, RVec<float> Muon_pt){
     }
 
     std::sort(Lepton_pt.begin(),Lepton_pt.end(),std::greater<float>());
-    Lepton_pt.resize(3);
-    return {LeptonIndex[Lepton_pt[0]].second,LeptonIndex[Lepton_pt[1]].second,LeptonIndex[Lepton_pt[2]].second,LeptonIndex[Lepton_pt[0]].first,LeptonIndex[Lepton_pt[1]].first,LeptonIndex[Lepton_pt[2]].first};
+
+    RVec<float> LeadLeptonInfo (2*Lepton_pt.size());
+//if we have more than 5 leptons, we drop those ones. Otherwise we might be picking too many junk leptons which can cause trouble.
+    if (Lepton_pt.size() < 5){
+        for (int i = 0; i < Lepton_pt.size(); i++){
+            LeadLeptonInfo[i] = LeptonIndex[Lepton_pt[i]].second;
+            LeadLeptonInfo[i+Lepton_pt.size()] = LeptonIndex[Lepton_pt[i]].first;
+        }
+    }
+    else{
+        Lepton_pt.resize(5);
+        LeadLeptonInfo.resize(10);
+        for (int i = 0; i < Lepton_pt.size(); i++){
+            LeadLeptonInfo[i] = LeptonIndex[Lepton_pt[i]].second;
+            LeadLeptonInfo[i+Lepton_pt.size()] = LeptonIndex[Lepton_pt[i]].first;
+        }
+    }
+    return LeadLeptonInfo;
 
 }
 
@@ -129,347 +145,71 @@ int TwoDCutV2(int LeptonType, int LeptonId, RVec<float> Electron_pt, RVec<float>
     return Pass2DCut;
 }
 
-RVec<int> RemainingLepton (int TopLepton){
-    //this code takes in the id of identified lepton from top, and returns the remaining lepton. For example, if the 2nd energetic lepton is from top, then it will return {0,2}
-    RVec<int> Remain = {-1,-1};
 
-    if (TopLepton == 0){
-        Remain = {1,2};
-    }
-    if (TopLepton == 1){
-        Remain = {0,2};
-    }
-    if (TopLepton == 2){
-        Remain = {0,1};
-    }
-    return Remain;
-}
+std::vector<std::vector<int>> MakePairs (std::vector<int> Indices){//warning:make sure the input has at least 2 elements!
 
-RVec<int> FindParticlePairs(int LeptonType, int Lepton0Id, int Lepton1Id, int Lepton2Id, RVec<int> Electron_charge, RVec<int> Muon_charge){
-    //there will be 2 different combination. We shall find them out first. 1 = {0,1}, 2 = {0,2}, 3= {1,2}. 
-    //If we get a vector {1,2} this means pair {0,1} and pair {0,2} are pair with different charge and therefore particle-antiparticle pairs
-    RVec<int> Pairs = {0,0};
-    if (LeptonType == 1){
-        if ((Electron_charge[Lepton0Id] + Electron_charge[Lepton1Id] == 0) && (Electron_charge[Lepton0Id] + Electron_charge[Lepton2Id] ==0)){
-            Pairs = {1,2};
-        }
-        
-        if ((Electron_charge[Lepton0Id] + Electron_charge[Lepton1Id] == 0) && (Electron_charge[Lepton1Id] + Electron_charge[Lepton2Id] ==0)){
-            Pairs = {1,3};
-        }
+    std::vector<std::vector<int>> Pairs;
 
-        if ((Electron_charge[Lepton0Id] + Electron_charge[Lepton2Id] == 0) && (Electron_charge[Lepton1Id] + Electron_charge[Lepton2Id] ==0)){
-            Pairs = {2,3};
-        }
-    }
-
-    if (LeptonType == 2){
-        if ((Muon_charge[Lepton0Id] + Muon_charge[Lepton1Id] == 0) && (Muon_charge[Lepton0Id] + Muon_charge[Lepton2Id] ==0)){
-            Pairs = {1,2};
-        }
-        
-        if ((Muon_charge[Lepton0Id] + Muon_charge[Lepton1Id] == 0) && (Muon_charge[Lepton1Id] + Muon_charge[Lepton2Id] ==0)){
-            Pairs = {1,3};
-        }
-
-        if ((Muon_charge[Lepton0Id] + Muon_charge[Lepton2Id] == 0) && (Muon_charge[Lepton1Id] + Muon_charge[Lepton2Id] ==0)){
-            Pairs = {2,3};
+    for (int i = 0; i < Indices.size(); i++){
+        for (int j = i + 1; j < Indices.size(); j++){
+            Pairs.push_back ({Indices[i],Indices[j]});
         }
     }
 
     return Pairs;
 }
 
-//this code find out the top lepton based on the particle-antiparitle pair. 
-int LeptonFromTop(int Pair){
-    int TopLepton = -1;
-    if (Pair == 1){
-        TopLepton = 2;
-    }
-    if (Pair == 2){
-        TopLepton = 1;
-    }
-    if (Pair == 3){
-        TopLepton = 0;
-    }
-    return TopLepton;
-}
-
-float FindPhiMass (int PairIndex, float Lepton1Pt, float Lepton1Phi, float Lepton1Eta, float Lepton1M, float Lepton2Pt, float Lepton2Phi, float Lepton2Eta, float Lepton2M, float Lepton3Pt, float Lepton3Phi, float Lepton3Eta, float Lepton3M){
-    float PhiMass = 0;
-    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(0,0,0,0);
-    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(0,0,0,0);
-
-    if (PairIndex == 1){
-        PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Lepton1Pt,Lepton1Eta,Lepton1Phi,Lepton1M);
-        PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Lepton2Pt,Lepton2Eta,Lepton2Phi,Lepton2M);
-        PhiMass = hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector});
-    }
-    
-    if (PairIndex == 2){
-        PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Lepton1Pt,Lepton1Eta,Lepton1Phi,Lepton1M);
-        PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Lepton2Pt,Lepton2Eta,Lepton2Phi,Lepton2M);
-        PhiMass = hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector});
+std::vector<std::vector<int>> FindSameFlavorPairs (std::vector<int> LeptonType){
+//this code will find out a collection of electron and muon, and run combinations over the collection if they have at least two element. we expect size of LeptonType >=3 due to cut in preselection
+    std::vector<int> ElectronIndices;
+    std::vector<int> MuonIndices;
+    std::vector<std::vector<int>> ElectronPairs;
+    std::vector<std::vector<int>> MuonPairs;
+    std::vector<std::vector<int>> LeptonPairs;
+    for (int i = 0; i < LeptonType.size(); i++){
+        if (LeptonType[i] == 1){//this is electron
+            ElectronIndices.push_back (i);
+        }
+        else{
+            MuonIndices.push_back (i);
+        }
     }
 
-    if (PairIndex ==3){
-        PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Lepton1Pt,Lepton1Eta,Lepton1Phi,Lepton1M);
-        PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Lepton2Pt,Lepton2Eta,Lepton2Phi,Lepton2M);
-        PhiMass = hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector});
-    }
-    
-    return PhiMass;
-}
-
-int FindLowerPhiMass(RVec<int> Pairs, float Lepton1Pt, float Lepton1Phi, float Lepton1Eta, float Lepton1M, float Lepton2Pt, float Lepton2Phi, float Lepton2Eta, float Lepton2M, float Lepton3Pt, float Lepton3Phi, float Lepton3Eta, float Lepton3M){
-    //find the deltaphi for each pair separately.
-    int Pair = -1;
-    float PhiMass1 = FindPhiMass(Pairs[0],Lepton1Pt,Lepton1Phi,Lepton1Eta,Lepton1M,Lepton2Pt,Lepton2Phi,Lepton2Eta,Lepton2M,Lepton3Pt,Lepton3Phi,Lepton3Eta,Lepton3M);
-    float PhiMass2 = FindPhiMass(Pairs[1],Lepton1Pt,Lepton1Phi,Lepton1Eta,Lepton1M,Lepton2Pt,Lepton2Phi,Lepton2Eta,Lepton2M,Lepton3Pt,Lepton3Phi,Lepton3Eta,Lepton3M);
-    if (PhiMass1 < PhiMass2){
-        Pair = Pairs[0];
+    if (ElectronIndices.size() < 2){
+        MuonPairs = MakePairs (MuonIndices);
+        LeptonPairs.insert(LeptonPairs.end(),MuonPairs.begin(),MuonPairs.end());
     }
     else{
-        Pair = Pairs[1];
+        if (MuonIndices.size() < 2){
+            ElectronPairs = MakePairs (ElectronIndices);
+            LeptonPairs.insert(LeptonPairs.end(),ElectronPairs.begin(),ElectronPairs.end());
+        }
+        else{
+            MuonPairs = MakePairs (MuonIndices);
+            ElectronPairs = MakePairs (ElectronIndices);
+            LeptonPairs.insert(LeptonPairs.end(),MuonPairs.begin(),MuonPairs.end());
+            LeptonPairs.insert(LeptonPairs.end(),ElectronPairs.begin(),ElectronPairs.end());
+        }
     }
 
-    return Pair;
+    return LeptonPairs;
 }
 
-RVec<int> LeptonCategorize(RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta, RVec<int> Electron_charge, RVec<int> Muon_charge){
-    //this code first find out whether we have 3 lepton of same class or not, and then apply the relative selecton standard
-    //initialize all the needed check conditions. By default, all of then are set to not passed.
-    int PassAllTest = 0;
-    int TopLepton = -1;//initialize the lepton from W
-    int PassPairCheck = 0;
-    int PassScalarMassCut = 0;
-    int PassRelativePhi = 0;
-    float PhiLepton1Phi;
-    float PhiLepton2Phi;
-    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(0,0,0,0);
-    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(0,0,0,0);
-    bool ThreeSameLepton;
-    RVec<int> LeptonPairId = {-1,-1};
-    int Lepton1Charge;
-    int Lepton2Charge;
-    int Lepton3Charge;
-    float Lepton1Pt;
-    float Lepton2Pt;
-    float Lepton3Pt;           
-    float Lepton1Phi;
-    float Lepton2Phi;
-    float Lepton3Phi;
-    float Lepton1Eta;
-    float Lepton2Eta;
-    float Lepton3Eta;
-    float Lepton1M;
-    float Lepton2M;
-    float Lepton3M;
-    int LowerPhiMassPair;
+int GetIntLeptonProperty(int LeptonType,int LeptonId,RVec<int> ElectronProperty, RVec<int> MuonProperty){
 
-    if (LeadLeptonInfo[0] == LeadLeptonInfo[1] && LeadLeptonInfo[1] == LeadLeptonInfo[2]){//three same lepton
-        ThreeSameLepton = true;
+    int LeptonFloat = -1;//by setting default value to -1 will give us a warning messeage if no lepton satisfying condition exist. Such event should be cut in preselections
+    
+    if(LeptonType == 1){//this is an electron
+        LeptonFloat = ElectronProperty[LeptonId];//then the lepton's property used to construct 4 vector should be relavent electron property
     }
     else{
-        ThreeSameLepton = false;
-    }
-    //let's work out the different case first.
-    if (ThreeSameLepton == false){
-        if (LeadLeptonInfo[0] == LeadLeptonInfo[1]) {
-            // First and second elements are equal
-            if (LeadLeptonInfo[0] != LeadLeptonInfo[2]) {
-                // Third element is different
-                TopLepton = 2; // Index 2 represents the third element
-            }
-        }
-        else {
-                // First and second elements are different
-            if (LeadLeptonInfo[0] == LeadLeptonInfo[2]) {
-                // Second element is different
-                TopLepton = 1; // Index 1 represents the second element
-            }
-            else {
-                // First element is different
-                TopLepton = 0; // Index 0 represents the first element
-            }
-        }
-
-
-        //now, check if the remaining two can give a invariant mass < 20 GeV
-        LeptonPairId = RemainingLepton(TopLepton);
-        //extrac the type of lepton and their position inside either Electron or Muon set
-        int PhiLeptonType1 = LeadLeptonInfo[LeptonPairId[0]];
-        int PhiLeptonId1 = LeadLeptonInfo[LeptonPairId[0] + 3];
-        int PhiLeptonType2 = LeadLeptonInfo[LeptonPairId[1]];
-        int PhiLeptonId2 = LeadLeptonInfo[LeptonPairId[1] + 3];
-        //check if they actually form a pair of particle-antiparticle by checking their charge.
-        if (PhiLeptonType1 == 1){
-            if (Electron_charge[PhiLeptonId1] + Electron_charge[PhiLeptonId2] == 0){
-                PassPairCheck = 1;
-            }
-        }
-        else{
-            if (PhiLeptonType1 == 2){
-                if(Muon_charge[PhiLeptonId1] + Muon_charge[PhiLeptonId2] == 0){
-                    PassPairCheck = 1;
-                }
-            }
-        }
-    
-        //construct the TLvector for these two leptons and then compute their invariant mass.
-        if (PhiLeptonType1 == 1){
-            PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
-        }
-        else{
-            PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
-        }
-        if (PhiLeptonType2 == 1){
-            PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
-        }
-        else{
-            PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
-        }
-
-        if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 100){
-            PassScalarMassCut = 1;
-        }
-
-        if (PassPairCheck == 1 && PassScalarMassCut == 1){
-            //Pass all the test
-            PassAllTest = 1;
+        if(LeptonType == 2){//this is a muon
+            LeptonFloat = MuonProperty[LeptonId];
         }
     }
-    //now we handle the case where we have eee or mumumu
-    if (ThreeSameLepton == true){
-        //first, get rid of the case e-e-e- or mu-,mu-,mu-, cannot form particle-antiparticle pairs in this case
-        //we will initialize the conditon outside of the electron/muon if loop. We do not want to run test over already failed pairs.
-        int PassAntiparticleCheck = 0;
-        RVec<int> Pairs = {0,0};
 
-
-
-        if (LeadLeptonInfo[0] == 1){//all electrons
-
-            Lepton1Charge = Electron_charge[LeadLeptonInfo[3]];
-            Lepton2Charge = Electron_charge[LeadLeptonInfo[4]];
-            Lepton3Charge = Electron_charge[LeadLeptonInfo[5]];
-            Lepton1Pt = Electron_pt[LeadLeptonInfo[3]];
-            Lepton2Pt = Electron_pt[LeadLeptonInfo[4]];
-            Lepton3Pt = Electron_pt[LeadLeptonInfo[5]];           
-            Lepton1Phi = Electron_eta[LeadLeptonInfo[3]];
-            Lepton2Phi = Electron_eta[LeadLeptonInfo[4]];
-            Lepton3Phi = Electron_eta[LeadLeptonInfo[5]];
-            Lepton1Eta = Electron_eta[LeadLeptonInfo[3]];
-            Lepton2Eta = Electron_eta[LeadLeptonInfo[4]];
-            Lepton3Eta = Electron_eta[LeadLeptonInfo[5]];
-            Lepton1M = 0.000511;
-            Lepton2M = 0.000511;
-            Lepton3M = 0.000511;
-
-            if (Lepton1Charge == Lepton2Charge && Lepton2Charge == Lepton3Charge){
-                PassAntiparticleCheck = 0;
-            }
-            else{
-                PassAntiparticleCheck = 1;
-                //there will be 2 different combination. We shall find them out first. 1 = {0,1}, 2 = {0,2}, 3= {1,2}. 
-                //If we get a vector {1,2} this means pair {0,1} and pair {0,2} are pair with different charge and therefore particle-antiparticle pairs. In this case, lepton 0 is the one with opposite sign with respect to the other two
-                //we chose the pair that give the lowest phi mass.
-                Pairs = FindParticlePairs(LeadLeptonInfo[0],LeadLeptonInfo[3],LeadLeptonInfo[4],LeadLeptonInfo[5],Electron_charge,Muon_charge);
-                LowerPhiMassPair = FindLowerPhiMass(Pairs,Lepton1Pt,Lepton1Phi,Lepton1Eta,Lepton1M,Lepton2Pt,Lepton2Phi,Lepton2Eta,Lepton2M,Lepton3Pt,Lepton3Phi,Lepton3Eta,Lepton3M);
-                TopLepton = LeptonFromTop(LowerPhiMassPair);
-
-                //copy from first part with different leptons, should be optimized.
-                LeptonPairId = RemainingLepton(TopLepton);
-                //extrac the type of lepton and their position inside either Electron or Muon set
-                int PhiLeptonType1 = LeadLeptonInfo[LeptonPairId[0]];
-                int PhiLeptonId1 = LeadLeptonInfo[LeptonPairId[0] + 3];
-                int PhiLeptonType2 = LeadLeptonInfo[LeptonPairId[1]];
-                int PhiLeptonId2 = LeadLeptonInfo[LeptonPairId[1] + 3];
-
-                PassPairCheck = 1;//this case automatically pass the particle-antiparticle pair check by its construction.
-                //now, check if the remaining two can give a invariant mass < 20 GeV
-                //construct the TLvector for these two leptons and then compute their invariant mass.
-
-                PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId1],Electron_eta[PhiLeptonId1],Electron_phi[PhiLeptonId1],0.000511);
-                PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Electron_pt[PhiLeptonId2],Electron_eta[PhiLeptonId2],Electron_phi[PhiLeptonId2],0.000511);
-
-                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 100){
-                    PassScalarMassCut = 1;
-                }
-
-                if (PassPairCheck == 1 && PassScalarMassCut == 1){
-                    //Pass all the test
-                    PassAllTest = 1;
-                }
-
-            }
-        }
-
-        if (LeadLeptonInfo[0] == 2){//all Muons
-
-            Lepton1Charge = Muon_charge[LeadLeptonInfo[3]];
-            Lepton2Charge = Muon_charge[LeadLeptonInfo[4]];
-            Lepton3Charge = Muon_charge[LeadLeptonInfo[5]];
-            Lepton1Pt = Muon_pt[LeadLeptonInfo[3]];
-            Lepton2Pt = Muon_pt[LeadLeptonInfo[4]];
-            Lepton3Pt = Muon_pt[LeadLeptonInfo[5]];           
-            Lepton1Phi = Muon_eta[LeadLeptonInfo[3]];
-            Lepton2Phi = Muon_eta[LeadLeptonInfo[4]];
-            Lepton3Phi = Muon_eta[LeadLeptonInfo[5]];
-            Lepton1Eta = Muon_eta[LeadLeptonInfo[3]];
-            Lepton2Eta = Muon_eta[LeadLeptonInfo[4]];
-            Lepton3Eta = Muon_eta[LeadLeptonInfo[5]];
-            Lepton1M = 0.105658;
-            Lepton2M = 0.105658;
-            Lepton3M = 0.105658;
-
-            if (Lepton1Charge == Lepton2Charge && Lepton2Charge == Lepton3Charge){
-                PassAntiparticleCheck = 0;
-            }
-            else{
-                PassAntiparticleCheck = 1;
-                //there will be 2 different combination. We shall find them out first. 1 = {0,1}, 2 = {0,2}, 3= {1,2}. 
-                //If we get a vector {1,2} this means pair {0,1} and pair {0,2} are pair with different charge and therefore particle-antiparticle pairs
-                //we chose the pair that give the lowest pt lepton from top
-                //FindParticlePairs should be optimized, as the charge information is already recorded above.
-                Pairs = FindParticlePairs(LeadLeptonInfo[0],LeadLeptonInfo[3],LeadLeptonInfo[4],LeadLeptonInfo[5],Electron_charge,Muon_charge);
-                LowerPhiMassPair = FindLowerPhiMass(Pairs,Lepton1Pt,Lepton1Phi,Lepton1Eta,Lepton1M,Lepton2Pt,Lepton2Phi,Lepton2Eta,Lepton2M,Lepton3Pt,Lepton3Phi,Lepton3Eta,Lepton3M);
-                TopLepton = LeptonFromTop(LowerPhiMassPair);
-                //copy from first part with different leptons, should be optimized
-                LeptonPairId = RemainingLepton(TopLepton);
-                //extrac the type of lepton and their position inside either Electron or Muon set
-                int PhiLeptonType1 = LeadLeptonInfo[LeptonPairId[0]];
-                int PhiLeptonId1 = LeadLeptonInfo[LeptonPairId[0] + 3];
-                int PhiLeptonType2 = LeadLeptonInfo[LeptonPairId[1]];
-                int PhiLeptonId2 = LeadLeptonInfo[LeptonPairId[1] + 3];
-
-                PassPairCheck = 1;//this case automatically pass the particle-antiparticle pair check by its construction.
-                //now, check if the remaining two can give a invariant mass < 20 GeV
-                //construct the TLvector for these two leptons and then compute their invariant mass.
-
-                PhiLepton1TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId1],Muon_eta[PhiLeptonId1],Muon_phi[PhiLeptonId1],0.105658);
-
-                PhiLepton2TLvector = ROOT::Math::PtEtaPhiMVector (Muon_pt[PhiLeptonId2],Muon_eta[PhiLeptonId2],Muon_phi[PhiLeptonId2],0.105658);
-
-                if (hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector}) < 100){
-                    PassScalarMassCut = 1;
-                }
-
-
-                if (PassPairCheck == 1 && PassScalarMassCut == 1){
-                    //Pass all the test
-                    PassAllTest = 1;
-                }
-
-            }
-        }
-    }
-    return {PassAllTest, TopLepton, LeptonPairId[0], LeptonPairId[1]};
+    return LeptonFloat;
 }
-
-
-
-//lepton pt, eta, phi and mass of the lepton. This function should take in all related value of electron/muon and choose based on the value of Electron/Muon id
 
 float GetFloatLeptonProperty(int LeptonType,int LeptonId,RVec<float> ElectronProperty, RVec<float> MuonProperty){
 
@@ -485,6 +225,95 @@ float GetFloatLeptonProperty(int LeptonType,int LeptonId,RVec<float> ElectronPro
     }
 
     return LeptonFloat;
+}
+
+std::vector<std::vector<int>> FindOppositeSignPairs (RVec<int> LeadLeptonInfo, std::vector<std::vector<int>> Pairs, RVec<int> Electron_charge, RVec<int> Muon_charge){
+    //this will slim the Pairs down to pairs with opposite signs.
+    std::vector<std::vector<int>> OppositeSignPairs;
+    int Lepton1Charge;
+    int Lepton2Charge;
+    for (int i = 0; i < Pairs.size(); i++){
+        Lepton1Charge = GetIntLeptonProperty(LeadLeptonInfo[Pairs[i][0]],LeadLeptonInfo[Pairs[i][0] + (LeadLeptonInfo.size()/2)],Electron_charge,Muon_charge);
+        Lepton2Charge = GetIntLeptonProperty(LeadLeptonInfo[Pairs[i][1]],LeadLeptonInfo[Pairs[i][1] + (LeadLeptonInfo.size()/2)],Electron_charge,Muon_charge);
+        if (Lepton1Charge + Lepton2Charge == 0){
+            OppositeSignPairs.push_back (Pairs[i]);
+        }
+    }
+    return OppositeSignPairs;
+}
+
+float FindPhiMass (std::vector<int> Pair, RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta){
+
+    float PhiLepton1Pt = GetFloatLeptonProperty (LeadLeptonInfo[Pair[0]],LeadLeptonInfo[Pair[0] + (LeadLeptonInfo.size()/2)],Electron_pt,Muon_pt);
+    float PhiLepton2Pt = GetFloatLeptonProperty (LeadLeptonInfo[Pair[1]],LeadLeptonInfo[Pair[1] + (LeadLeptonInfo.size()/2)],Electron_pt,Muon_pt);
+    float PhiLepton1Eta = GetFloatLeptonProperty (LeadLeptonInfo[Pair[0]],LeadLeptonInfo[Pair[0] + (LeadLeptonInfo.size()/2)],Electron_eta,Muon_eta);
+    float PhiLepton2Eta = GetFloatLeptonProperty (LeadLeptonInfo[Pair[1]],LeadLeptonInfo[Pair[1] + (LeadLeptonInfo.size()/2)],Electron_eta,Muon_eta);
+    float PhiLepton1Phi = GetFloatLeptonProperty (LeadLeptonInfo[Pair[0]],LeadLeptonInfo[Pair[0] + (LeadLeptonInfo.size()/2)],Electron_phi,Muon_phi);
+    float PhiLepton2Phi = GetFloatLeptonProperty (LeadLeptonInfo[Pair[1]],LeadLeptonInfo[Pair[1] + (LeadLeptonInfo.size()/2)],Electron_phi,Muon_phi);
+    float PhiLepton1M;
+    float PhiLepton2M;
+    if (LeadLeptonInfo[Pair[0]] == 1){
+        PhiLepton1M = 0.000511;
+        PhiLepton2M = 0.000511;
+    }
+    else{
+        PhiLepton1M = 0.105658;
+        PhiLepton2M = 0.105658;
+    }
+    ROOT::Math::PtEtaPhiMVector PhiLepton1TLvector(PhiLepton1Pt,PhiLepton1Eta,PhiLepton1Phi,PhiLepton1M);
+    ROOT::Math::PtEtaPhiMVector PhiLepton2TLvector(PhiLepton2Pt,PhiLepton2Eta,PhiLepton2Phi,PhiLepton2M);
+
+    float InvariantMass = hardware::InvariantMass({PhiLepton1TLvector,PhiLepton2TLvector});
+    return InvariantMass;
+}
+
+std::vector<int> FindLowerPhiMass (std::vector<std::vector<int>> Pairs, RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta){
+    std::vector<float> PhiMass;
+    int LowestMassPair;
+    float LowestMassValue;
+
+    for (int i = 0; i < Pairs.size();i++){
+        PhiMass.push_back(FindPhiMass(Pairs[i],LeadLeptonInfo, Electron_pt, Muon_pt, Electron_phi, Muon_phi, Electron_eta, Muon_eta));
+    }
+
+    LowestMassPair = 0;
+    LowestMassValue = PhiMass[0];
+
+    for (int i = 0; i < Pairs.size(); i++){
+        if (PhiMass[i] < LowestMassValue){
+            LowestMassValue = PhiMass[i];
+            LowestMassPair = i;
+        }
+    }
+
+    return Pairs[LowestMassPair];
+}
+
+//Don't bother with the lepton from top in non-boosted case. It's just not going to help by any means. Find all the relavent pairs and just compute if 1. they have opposite charge 2. their invariant mass.
+RVec<int> FindPhiLepton (RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta, RVec<int> Electron_charge, RVec<int> Muon_charge){
+    //first, find out all the pairs using LeadLeptonInfo: the first half of it will contain only 1 or 2 based on whether it's electron or muon
+    //it's possible that an event will contain no qualified pairs because they are all of the same sign. We want to abort such data if happened.
+    std::vector<int> LeptonType;
+    std::vector<std::vector<int>> SameFlavorPairs;
+    std::vector<std::vector<int>> SameFlavorOppositeSignPairs;
+    std::vector<int> LowerPhiMassPair = {0,0};
+    RVec<int> PhiLeptonPair = {0,0,0}; //The first digit is used to make sure all test are passed.
+    for (int i = 0; i < (LeadLeptonInfo.size()/2); i++){
+        LeptonType.push_back(LeadLeptonInfo[i]);
+    }
+
+    SameFlavorPairs = FindSameFlavorPairs (LeptonType);
+    SameFlavorOppositeSignPairs = FindOppositeSignPairs (LeadLeptonInfo,SameFlavorPairs,Electron_charge,Muon_charge);
+    //now, we compute the mass of all these pairs, and choose the pair with lowest invariant mass
+    if (SameFlavorOppositeSignPairs.size() > 0){
+        PhiLeptonPair[0] = 1;
+        LowerPhiMassPair = FindLowerPhiMass (SameFlavorOppositeSignPairs, LeadLeptonInfo, Electron_pt, Muon_pt, Electron_phi, Muon_phi,Electron_eta, Muon_eta);
+    }
+
+    PhiLeptonPair[1] = LowerPhiMassPair[0];
+    PhiLeptonPair[2] = LowerPhiMassPair[1];
+
+    return PhiLeptonPair;
 }
 
 float NeutrinoEta(float Lepton_pt, float Lepton_phi, float Lepton_eta, float MET_pt, float MET_phi){//find eta using mass of Wboson
@@ -531,4 +360,4 @@ const ROOT::RVec<int> FindMothersPdgId(const ROOT::RVec<int>& genpart_id, const 
     }
     return mother_pdgids;
 
-};
+}
