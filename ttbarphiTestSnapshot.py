@@ -10,7 +10,9 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-selection = ttbarphiClass('ttbarphi-signal_18.txt',18,1,1)
+filename = 'QCDHT2000_17'
+
+selection = ttbarphiClass('{}.txt'.format(filename),17,1,1)
 selection.Preselection()
 selection.Selection()
 selection.JetsCandidateKinematicinfo()
@@ -19,10 +21,21 @@ selection.Snapshot()
 
 print ('%s sec'%(time.time()-start))
 
+histgroup = HistGroup('{}'.format(filename))
+
 histList = []
 
 h1 = selection.a.DataFrame.Histo1D(('PhiInvMass','',100,0,100),'PhiInvMass')
 histList.append(h1)
+
+h1.GetValue()
+
+histgroup.Add('PhiInvMass',h1)
+
+outfile = ROOT.TFile.Open('rootfiles/kinDist_{}.root'.format(filename),'RECREATE')
+outfile.cd()
+histgroup.Do('Write')
+outfile.Close()
 
 h2 = selection.a.DataFrame.Histo1D(('WhichLepton','',100,0,10),'WhichLepton')
 histList.append(h2)

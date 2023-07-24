@@ -77,22 +77,25 @@ class ttbarphiClass:
         self.a.Cut('nFatJet','(nFatJet > 0 && nJet > 0) || (nJet > 2)')
         self.NJETS = self.getNweighted()
         self.AddCutflowColumn(self.NJETS,"NJETS")
-        self.a.Cut('nLepton','nElectron > 0 || nMuon > 0') #make sure at least one lepton exist
+
+        # we do not want electrons produced by photon pairs. They will mess up our data because they have 0 invariant mass.
+        self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
+        self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
-        #since we have a light scalar decay into two lepton, we should have at least 3 isolatedlepton
-        #Debug purpse:
-        #self.a.Cut('testLeptonCut','nElectron == 1')
 
 
-        self.a.Define('nTotalLepton','nElectron + nMuon')
+        self.a.Define('nTotalLepton','nNonConvertedElectron + nMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
         self.NLeptons = self.getNweighted()
         self.AddCutflowColumn(self.NLeptons,"NLeptons")         
 
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
-        self.a.Define('LeadingThreeLepton','FindLeadLepton(Electron_pt,Muon_pt)')
+        
+        #note:currently, modified to examine Muons only. This means that we should have at least 2 Muon per event.
+        self.a.Cut('MuonNumberCut','nMuon > 1')
+        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,Muon_pt)')
         self.a.Define('nLeadingLeptons','LeadingThreeLepton.size()/2')
         # make sure the least energetic one have at least 25 GeV
         #self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[0],LeadingThreeLepton[3])')
@@ -108,7 +111,7 @@ class ttbarphiClass:
 
         #now we start to handle the leptons. We'll handle this part in c++
         #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
-        self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,Electron_pt,Muon_pt,Electron_phi,Muon_phi,Electron_eta,Muon_eta,Electron_charge,Muon_charge)')
+        self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,Muon_pt,NonConvertedElectron_phi,Muon_phi,NonConvertedElectron_eta,Muon_eta,NonConvertedElectron_charge,Muon_charge)')
         self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
         self.NPassAllSelection = self.getNweighted()
         self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
@@ -120,15 +123,15 @@ class ttbarphiClass:
         #first give relatvent information of lepton; do not use Lepton_*, will cause a bug in snapshot
         #we now define the kinematics variables of the three lepton. The one from W followed by ones from phi
 
-        self.a.Define('PhiLepton1_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],Electron_pt,Muon_pt)')
-        self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],Electron_eta,Muon_eta)')
-        self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],Electron_phi,Muon_phi)')
-        self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,Electron_mass,Muon_mass)')
+        self.a.Define('PhiLepton1_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_pt,Muon_pt)')
+        self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_eta,Muon_eta)')
+        self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_phi,Muon_phi)')
+        self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,NonConvertedElectron_mass,Muon_mass)')
 
-        self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],Electron_pt,Muon_pt)')
-        self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],Electron_eta,Muon_eta)')
-        self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],Electron_phi,Muon_phi)')
-        self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons] ,Electron_mass,Muon_mass)')
+        self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_pt,Muon_pt)')
+        self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_eta,Muon_eta)')
+        self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_phi,Muon_phi)')
+        self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons] ,NonConvertedElectron_mass,Muon_mass)')
 
 
         return self.a.GetActiveNode()
@@ -145,7 +148,7 @@ class ttbarphiClass:
  
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
-        self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
+        #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
         self.NFinalEvent = self.getNweighted()
         self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")  
         print ("SnapShot compited")

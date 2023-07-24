@@ -46,34 +46,22 @@ RVec<int> FindLeadLepton(RVec<float> Electron_pt, RVec<float> Muon_pt){
         LeptonIndex[Muon_pt[i]] = std::make_pair(i,2);//(i,2) stand for element of muons
     }
 
-    std::vector<float> Lepton_pt (Electron_pt.size() + Muon_pt.size());
-
-    for (int i = 0; i < Electron_pt.size(); i++){
-        Lepton_pt[i] = Electron_pt[i];
-    }
+    std::vector<float> Lepton_pt (Muon_pt.size());
 
     for (int i = 0; i < Muon_pt.size(); i++){
-        Lepton_pt[i + Electron_pt.size()] = Muon_pt[i];
+        Lepton_pt[i] = Muon_pt[i];
     }
 
     std::sort(Lepton_pt.begin(),Lepton_pt.end(),std::greater<float>());
 
     RVec<float> LeadLeptonInfo (2*Lepton_pt.size());
-//if we have more than 5 leptons, we drop those ones. Otherwise we might be picking too many junk leptons which can cause trouble.
-    if (Lepton_pt.size() < 5){
-        for (int i = 0; i < Lepton_pt.size(); i++){
-            LeadLeptonInfo[i] = LeptonIndex[Lepton_pt[i]].second;
-            LeadLeptonInfo[i+Lepton_pt.size()] = LeptonIndex[Lepton_pt[i]].first;
-        }
+
+    for (int i = 0; i < Lepton_pt.size(); i++){
+        LeadLeptonInfo[i] = LeptonIndex[Lepton_pt[i]].second;
+        LeadLeptonInfo[i+Lepton_pt.size()] = LeptonIndex[Lepton_pt[i]].first;
     }
-    else{
-        Lepton_pt.resize(5);
-        LeadLeptonInfo.resize(10);
-        for (int i = 0; i < Lepton_pt.size(); i++){
-            LeadLeptonInfo[i] = LeptonIndex[Lepton_pt[i]].second;
-            LeadLeptonInfo[i+Lepton_pt.size()] = LeptonIndex[Lepton_pt[i]].first;
-        }
-    }
+
+
     return LeadLeptonInfo;
 
 }
