@@ -6,8 +6,9 @@ from TIMBER.Tools.Plot import CompareShapes
 from TIMBER.Analyzer import Correction
 import multiprocessing, ROOT, time
 
-all_hist = {'bkg':{},'sig':{},'data':None}
 
+'''
+all_hist = {'bkg':{},'sig':{},'data':None}
 for name in ['ttbarphi-signal','ttbar-semi','ttbar-had']:
     
     tempFile = ROOT.TFile.Open('rootfiles/kinDist_{}_17.root'.format(name))
@@ -18,6 +19,8 @@ for name in ['ttbarphi-signal','ttbar-semi','ttbar-had']:
     else:
         all_hist['bkg'][name] = h
         print('creating dictionary for {}, created under bkg'.format(name))
+'''
+
 
 hist = {'bkg':{},'sig':{},'data':None}
 

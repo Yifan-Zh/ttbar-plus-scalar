@@ -1,7 +1,7 @@
 import ROOT
 from TIMBER.Analyzer import Correction, CutGroup, ModuleWorker, analyzer
 from TIMBER.Tools.Common import CompileCpp, OpenJSON
-from TIMBER.Tools.AutoPU import ApplyPU
+from TIMBER.Tools.AutoPU import ApplyPU,AutoPU
 from helpers import SplitUp
 import TIMBER.Tools.AutoJME as AutoJME
 
@@ -35,10 +35,11 @@ class ttbarphiClass:
         if inputfile.endswith('.txt'):
             self.setname = inputfile.split('/')[-1].split('_')[0]
         else:
-            self.setname = inputfile.split('/')[-1].split('_')[1]
+            self.setname = inputfile.split('/')[-1].split('_')[0]
         self.year = str(year)	# most of the time this class will be instantiated from other scripts with CLI args, so just convert to string for internal use
         self.ijob = ijob
         self.njobs = njobs
+        print ('setname is {}, year is {}'.format(self.setname,self.year))
         self.config = OpenJSON('THconfig.json')
         self.cuts = self.config['CUTS']
         self.newTrigs = self.config['TRIGS']	
@@ -66,6 +67,44 @@ class ttbarphiClass:
             return self.a.DataFrame.Sum("genWeight").GetValue()
         else:
             return self.a.DataFrame.Count().GetValue()
+        
+    #standard correction to MC/Data:
+
+    def ApplyStandardCorrections(self,snapshot=False):
+        if snapshot:
+            if self.a.isData:
+                lumiFilter = ModuleWorker('LumiFilter','TIMBER/Framework/include/LumiFilter.h',[int(self.year) if 'APV' not in self.year else 16])
+                self.a.Cut('lumiFilter',lumiFilter.GetCall(evalArgs={"lumi":"luminosityBlock"}))
+
+            else:
+                self.a = AutoPU(self.a, self.year, ULflag=True)
+                self.a.AddCorrection(
+                    Correction('Pdfweight','TIMBER/Framework/include/PDFweight_uncert.h',[self.a.lhaid],corrtype='uncert')
+                )
+                if self.year == '16' or self.year == '17' or self.year == '16APV':
+		        # The column names are: L1PreFiringWeight_Up, L1PreFiringWeight_Dn, L1PreFiringWeight_Nom
+                    L1PreFiringWeight = Correction("L1PreFiringWeight","TIMBER/Framework/TopPhi_modules/BranchCorrection.cc",constructor=[],mainFunc='evalWeight',corrtype='weight',columnList=['L1PreFiringWeight_Nom','L1PreFiringWeight_Up','L1PreFiringWeight_Dn'])
+                    self.a.AddCorrection(L1PreFiringWeight, evalArgs={'val':'L1PreFiringWeight_Nom','valUp':'L1PreFiringWeight_Up','valDown':'L1PreFiringWeight_Dn'})	
+
+                elif self.year == '18':
+                    self.a.AddCorrection(
+                        Correction('HEM_drop','TIMBER/Framework/include/HEM_drop.h',[self.setname],corrtype='corr')
+                    )
+
+        
+        else:
+            if not self.a.isData:
+                self.a.AddCorrection(Correction('Pileup',corrtype='weight'))
+                self.a.AddCorrection(Correction('Pdfweight',corrtype='uncert'))
+                if self.year == '16' or self.year == '17' or self.year == '16APV':
+                    #self.a.AddCorrection(Correction('Prefire',corrtype='weight'))
+                    self.a.AddCorrection(Correction('L1PreFiringWeight',corrtype='weight'))
+                elif self.year == '18':
+                    self.a.AddCorrection(Correction('HEM_drop',corrtype='corr'))
+                if 'ttbar' in self.setname:
+                    self.a.AddCorrection(Correction('TptReweight',corrtype='weight'))
+                
+        return self.a.GetActiveNode()
 
 
     # this is the preselection for non-boosted case. In this case DO NOT use top tagger (it won't work)
@@ -164,12 +203,28 @@ class ttbarphiClass:
             'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass'
         ]
 
+        if not self.a.isData:
+            columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__nom','Pdfweight__up','Pdfweight__down'])
+            columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
+            if self.year == '16' or self.year == '17' or self.year == '16APV':
+                columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
+                columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
+            elif self.year == '18':
+                columns.append('HEM_drop__nom')
+
         if (len(colNames) > 0):
             columns.extend(colNames)
 
         self.a.SetActiveNode(node)
         self.a.Snapshot(columns,'ttbarphisnapshot_%s_%s_%sof%s.root'%(self.setname,self.year,self.ijob,self.njobs),'Events',openOption='RECREATE',saveRunChain=True)
         self.a.SetActiveNode(startNode)
+
+    def GetXsecScale(self):
+        lumi = self.config['lumi{}'.format(self.year if 'APV' not in self.year else 16)]
+        xsec = self.config['XSECS'][self.setname]
+        if self.a.genEventSumw == 0:
+            raise ValueError('%s %s: genEventSumw is 0'%(self.setname, self.year))
+        return lumi*xsec/self.a.genEventSumw
 
         
 
