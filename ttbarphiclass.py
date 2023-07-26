@@ -202,15 +202,17 @@ class ttbarphiClass:
             'PhiInvMass','WhichLepton',
             'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass'
         ]
-
+        
         if not self.a.isData:
-            columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__nom','Pdfweight__up','Pdfweight__down'])
+            columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
             columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
+
             if self.year == '16' or self.year == '17' or self.year == '16APV':
                 columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
                 columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
             elif self.year == '18':
                 columns.append('HEM_drop__nom')
+            
 
         if (len(colNames) > 0):
             columns.extend(colNames)

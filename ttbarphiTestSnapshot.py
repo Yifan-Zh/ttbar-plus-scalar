@@ -10,9 +10,9 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-filename = 'ttbar-semilep_17'
+filename = 'ttbarphi-signal'
 
-selection = ttbarphiClass('{}.txt'.format(filename),17,1,1)
+selection = ttbarphiClass('{}.root'.format(filename),18,1,1)
 selection.Preselection()
 selection.Selection()
 selection.JetsCandidateKinematicinfo()
@@ -20,6 +20,7 @@ selection.MassReconstruction()
 selection.ApplyStandardCorrections(snapshot = True)
 print('corrections are {}'.format(selection.GetXsecScale()))
 selection.a.MakeWeightCols(extraNominal='' if selection.a.isData else 'genWeight*%s'%selection.GetXsecScale())
+
 selection.Snapshot()
 
 
@@ -45,7 +46,7 @@ hist.Do('Write')
 outfile.Close()
 
 tempfile = ROOT.TFile.Open('rootfiles/kinDist_{}.root'.format(filename))
-h1 = tempfile.Get("PhiInvMass__Pileup_up")
+h1 = tempfile.Get("PhiInvMass__nominal")
 histList.append(h1)
 
 h2 = selection.a.DataFrame.Histo1D(('WhichLepton','',100,0,10),'WhichLepton')

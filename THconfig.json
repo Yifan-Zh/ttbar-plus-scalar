@@ -251,7 +251,8 @@
         "TprimeB-3000-250": 0.01,
         "TprimeB-3000-350": 0.01,
         "TprimeB-3000-450": 0.01,
-        "TprimeB-3000-500": 0.01
+        "TprimeB-3000-500": 0.01,
+        "ttbarphi-signal":0.01
     },
     "CUTS":{
         "pt":350,

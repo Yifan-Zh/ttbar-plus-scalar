@@ -41,10 +41,10 @@ h7 = tempfile7.Get('PhiInvMass')
 hist['sig']['ttbarphi-signal'] = h1
 hist['bkg']['ttbar-had'] = h2
 hist['bkg']['ttbar-semi'] = h3
-hist['bkg']['QCD700'] = h4
-hist['bkg']['QCD1000'] = h5
-hist['bkg']['QCD1500'] = h6
-hist['bkg']['QCD2000'] = h7
+hist['bkg']['QCDHT700'] = h4
+hist['bkg']['QCDHT1000'] = h5
+hist['bkg']['QCDHT1500'] = h6
+hist['bkg']['QCDHT2000'] = h7
 
 CompareShapes ('plots_PhiInvMass.pdf',17,'PhiInvMass[GeV]',
                bkgs=hist['bkg'],
