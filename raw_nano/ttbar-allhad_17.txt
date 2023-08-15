@@ -85,8 +85,8 @@ root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_Tune
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/941C9A7A-69A1-394E-9B7E-F2A9269223B4.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/61193E79-F558-8E4A-8068-3DD8BE41C27F.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/DC614999-EB3A-C448-8243-C1313E621115.root
-root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/1094B0D1-7B5D-2449-B12A-736A4F7B7C98.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/6B050510-4AA7-AB40-9C65-89FF08572E67.root
+root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/1094B0D1-7B5D-2449-B12A-736A4F7B7C98.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/F28E5993-2E9B-0549-B291-22A4CD03385F.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/AD3B4C90-6F94-7D45-9F91-E50A54C1E57C.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/3C1B6BCD-7772-9C45-B587-15F4E5BC90FD.root
@@ -112,8 +112,8 @@ root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_Tune
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/E3E840FC-599D-CF4E-A607-015D38A4A197.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/5F8D7E39-E1B4-294F-8BAC-8994ED2F0399.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/C11931D2-4BB0-2C44-98AA-478C84B931D8.root
-root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/0DD11434-539B-FA45-8010-E66508CFC81B.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/175E5521-77C0-4A44-91B4-AD08834F626E.root
+root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/0DD11434-539B-FA45-8010-E66508CFC81B.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/6D69DC46-844B-434F-939B-121E73D57468.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/C86C0E78-CC5E-2641-9B61-49A0AC33B984.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/CBC2D4A7-1489-3C43-983C-E7118DC86009.root
@@ -139,8 +139,8 @@ root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_Tune
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/87F45DAE-3A69-8646-954F-4908B7C4476C.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/743DAA2C-9E22-504D-B491-11EF918A75C4.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/4FAE392D-3CA2-8746-89CA-0B1FDE5827E5.root
-root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/9769B2C8-9DAB-3748-B018-FBE0E8547E4A.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/2F9BFE0C-45CD-CA4A-B850-6D432D7D3B04.root
+root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/9769B2C8-9DAB-3748-B018-FBE0E8547E4A.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/7AA798CA-0AAA-D843-88BE-1D99ADBF9C90.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/8247DC06-FC7D-C149-AF31-76713F2DED1E.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/A678709B-FAA1-AB4B-B265-A349CE8B15E7.root
@@ -166,8 +166,8 @@ root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_Tune
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/A04C9439-CEF7-9143-8949-8CC9CE9ED87B.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/4B74CFC2-696F-D14F-BAE3-95B49DC66EC7.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/CED6B668-DC39-6444-ACB8-A5C19A4EA3F0.root
-root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/B496AD58-AAB2-5844-892E-31352CE56A92.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/BD7D5D5C-448E-1843-AB78-EC0BAA284372.root
+root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/B496AD58-AAB2-5844-892E-31352CE56A92.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/E7F0BFD0-E1DE-BB47-8F6B-B1E617C09C10.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/997882F3-F9EE-D149-A4A1-711862DD6683.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/F1F1DE11-B5E8-CC49-9DD8-573F5D76662D.root
@@ -193,7 +193,7 @@ root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_Tune
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/E0DFC425-FE90-0D46-8EFF-6919C9F4C6C5.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/4791E158-632B-0B47-9275-87B9A3EFCF62.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/699F4182-B7B0-9243-A403-10281B8F9A3E.root
-root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/4B312056-E334-FF47-A4E7-554CC02D8826.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/F4FC23C1-D1E5-1B4D-84CF-C868FBC647AB.root
+root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/4B312056-E334-FF47-A4E7-554CC02D8826.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/1EC47DBF-7E00-134A-A146-AC661098BF12.root
 root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17NanoAODv9/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/106X_mc2017_realistic_v9-v1/80000/D5FBA8C2-254A-3549-B013-3337F47575CB.root

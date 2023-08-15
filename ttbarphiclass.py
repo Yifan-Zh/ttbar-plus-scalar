@@ -85,12 +85,12 @@ class ttbarphiClass:
 		        # The column names are: L1PreFiringWeight_Up, L1PreFiringWeight_Dn, L1PreFiringWeight_Nom
                     L1PreFiringWeight = Correction("L1PreFiringWeight","TIMBER/Framework/TopPhi_modules/BranchCorrection.cc",constructor=[],mainFunc='evalWeight',corrtype='weight',columnList=['L1PreFiringWeight_Nom','L1PreFiringWeight_Up','L1PreFiringWeight_Dn'])
                     self.a.AddCorrection(L1PreFiringWeight, evalArgs={'val':'L1PreFiringWeight_Nom','valUp':'L1PreFiringWeight_Up','valDown':'L1PreFiringWeight_Dn'})	
-
+                '''
                 elif self.year == '18':
                     self.a.AddCorrection(
                         Correction('HEM_drop','TIMBER/Framework/include/HEM_drop.h',[self.setname],corrtype='corr')
                     )
-
+                '''
         
         else:
             if not self.a.isData:
@@ -99,8 +99,8 @@ class ttbarphiClass:
                 if self.year == '16' or self.year == '17' or self.year == '16APV':
                     #self.a.AddCorrection(Correction('Prefire',corrtype='weight'))
                     self.a.AddCorrection(Correction('L1PreFiringWeight',corrtype='weight'))
-                elif self.year == '18':
-                    self.a.AddCorrection(Correction('HEM_drop',corrtype='corr'))
+                #elif self.year == '18':
+                    #self.a.AddCorrection(Correction('HEM_drop',corrtype='corr'))
                 if 'ttbar' in self.setname:
                     self.a.AddCorrection(Correction('TptReweight',corrtype='weight'))
                 
@@ -120,11 +120,12 @@ class ttbarphiClass:
         # we do not want electrons produced by photon pairs. They will mess up our data because they have 0 invariant mass.
         self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
         self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
+        self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav != 4 && Muon_genPartFlav != 5')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
 
 
-        self.a.Define('nTotalLepton','nNonConvertedElectron + nMuon')
+        self.a.Define('nTotalLepton','nNonConvertedElectron + nNotHvyMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
         self.NLeptons = self.getNweighted()
         self.AddCutflowColumn(self.NLeptons,"NLeptons")         
@@ -133,11 +134,11 @@ class ttbarphiClass:
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
         
         #note:currently, modified to examine Muons only. This means that we should have at least 2 Muon per event.
-        self.a.Cut('MuonNumberCut','nMuon > 1')
-        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,Muon_pt)')
+	#we want to focus on the Muon NOT from heavy flavor particles
+        self.a.Cut('MuonNumberCut','nNotHvyMuon > 1')
+        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')
         self.a.Define('nLeadingLeptons','LeadingThreeLepton.size()/2')
-        # make sure the least energetic one have at least 25 GeV
-        #self.a.Define('LeptonMinPtConstriant','MinPtConstraint(Electron_pt,Muon_pt,LeadingThreeLepton[0],LeadingThreeLepton[3])')
+
         #Debugging: the pt constraint might be too tight
         #self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
         self.NPreselection = self.getNweighted()
@@ -150,7 +151,7 @@ class ttbarphiClass:
 
         #now we start to handle the leptons. We'll handle this part in c++
         #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
-        self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,Muon_pt,NonConvertedElectron_phi,Muon_phi,NonConvertedElectron_eta,Muon_eta,NonConvertedElectron_charge,Muon_charge)')
+        self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,NotHvyMuon_pt,NonConvertedElectron_phi,NotHvyMuon_phi,NonConvertedElectron_eta,NotHvyMuon_eta,NonConvertedElectron_charge,NotHvyMuon_charge)')
         self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
         self.NPassAllSelection = self.getNweighted()
         self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
@@ -189,8 +190,7 @@ class ttbarphiClass:
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
         #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
         self.NFinalEvent = self.getNweighted()
-        self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")  
-        print ("SnapShot compited")
+        self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[]):
@@ -203,6 +203,9 @@ class ttbarphiClass:
             'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass'
         ]
         
+       # columns = ['nMuon']
+
+        '''
         if not self.a.isData:
             columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
             columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
@@ -210,12 +213,18 @@ class ttbarphiClass:
             if self.year == '16' or self.year == '17' or self.year == '16APV':
                 columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
                 columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
+	'''
+        '''
             elif self.year == '18':
                 columns.append('HEM_drop__nom')
-            
+        '''
 
         if (len(colNames) > 0):
             columns.extend(colNames)
+
+        testcol = ['PhiInvMass', 'WhichLepton',
+                    'PhiLepton1_pt', 'PhiLepton1_eta', 'PhiLepton1_phi', 'PhiLepton1_mass'
+                        ]
 
         self.a.SetActiveNode(node)
         self.a.Snapshot(columns,'ttbarphisnapshot_%s_%s_%sof%s.root'%(self.setname,self.year,self.ijob,self.njobs),'Events',openOption='RECREATE',saveRunChain=True)
@@ -227,7 +236,4 @@ class ttbarphiClass:
         if self.a.genEventSumw == 0:
             raise ValueError('%s %s: genEventSumw is 0'%(self.setname, self.year))
         return lumi*xsec/self.a.genEventSumw
-
-        
-
 

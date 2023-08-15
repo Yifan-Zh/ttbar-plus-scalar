@@ -10,16 +10,16 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-filename = 'ttbarphi-signal'
+filename = 'ttbarphi-signal_18'
 
-selection = ttbarphiClass('{}.root'.format(filename),18,1,1)
+selection = ttbarphiClass('{}.txt'.format(filename),18,1,1)
 selection.Preselection()
 selection.Selection()
 selection.JetsCandidateKinematicinfo()
 selection.MassReconstruction()
-selection.ApplyStandardCorrections(snapshot = True)
-print('corrections are {}'.format(selection.GetXsecScale()))
-selection.a.MakeWeightCols(extraNominal='' if selection.a.isData else 'genWeight*%s'%selection.GetXsecScale())
+#selection.ApplyStandardCorrections(snapshot = True)
+#print('corrections are {}'.format(selection.GetXsecScale()))
+#selection.a.MakeWeightCols(extraNominal='' if selection.a.isData else 'genWeight*%s'%selection.GetXsecScale())
 
 selection.Snapshot()
 
@@ -32,14 +32,14 @@ histgroup = HistGroup('{}'.format(filename))
 
 histList = []
 
-hist = selection.a.MakeTemplateHistos(ROOT.TH1F("PhiInvMass","Invariant Mass;m_{SD}(GeV);N_{Events}",100,0,100),'PhiInvMass')
-#h1 = selection.a.DataFrame.Histo1D(('PhiInvMass','',100,0,100),'PhiInvMass')
+#hist = selection.a.MakeTemplateHistos(ROOT.TH1F("PhiInvMass","Invariant Mass;m_{SD}(GeV);N_{Events}",100,0,100),'PhiInvMass')
+h1 = selection.a.DataFrame.Histo1D(('PhiInvMass','',100,0,100),'PhiInvMass')
+histList.append(h1)
 
 
 
 
-
-
+'''
 outfile = ROOT.TFile.Open('rootfiles/kinDist_{}.root'.format(filename),'RECREATE')
 outfile.cd()
 hist.Do('Write')
@@ -51,7 +51,7 @@ histList.append(h1)
 
 h2 = selection.a.DataFrame.Histo1D(('WhichLepton','',100,0,10),'WhichLepton')
 histList.append(h2)
-
+'''
 c = ROOT.TCanvas('c','c')
 c.cd()
 
@@ -59,4 +59,5 @@ for h in histList:
     c.Clear()
     name = h.GetName()
     h.Draw()
-    c.Print('{}.pdf'.format(name))
+    c.Print('{}_{}.pdf'.format(filename,name))
+    

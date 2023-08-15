@@ -123,7 +123,7 @@ class ttbarClass:
         self.a.Define("GenB_phi","GenPart_phi[GenPart_pdgId ==5 or GenPart_pdgId == -5]")
         #find mother's PDG IDs
         self.a.Define("GenB_pdgIdMother","FindMothersPdgId(GenPart_pdgId,GenB_genPartIdxMother)")
-        self.a.Define("GenBfromT_pt","GenB_pt[GenB_pdgIdMother==6 or GenPart_pdgId == -6]")
+        self.a.Define("GenBfromT_pt","GenB_pt[GenB_pdgIdMother==6 or GenPart_pdgIdMother == -6]")
         #find number of bJets in the system:
         self.a.Define("nbJets","FindbJets(Jet_btagCSVV2)")
         #find whether all b quarks are accompanied by some AK4 jet in the system
