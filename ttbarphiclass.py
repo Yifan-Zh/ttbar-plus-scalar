@@ -77,7 +77,7 @@ class ttbarphiClass:
                 self.a.Cut('lumiFilter',lumiFilter.GetCall(evalArgs={"lumi":"luminosityBlock"}))
 
             else:
-                self.a = AutoPU(self.a, self.year, ULflag=True)
+                #self.a = AutoPU(self.a, self.year, ULflag=True)
                 self.a.AddCorrection(
                     Correction('Pdfweight','TIMBER/Framework/include/PDFweight_uncert.h',[self.a.lhaid],corrtype='uncert')
                 )
@@ -110,25 +110,26 @@ class ttbarphiClass:
     # this is the preselection for non-boosted case. In this case DO NOT use top tagger (it won't work)
     # we first want to mark all the event with:
     def Preselection(self):
-        self.NPROC = self.getNweighted()
-        self.AddCutflowColumn(self.NPROC,"NPROC")
+        #self.NPROC = self.getNweighted()
+        #self.AddCutflowColumn(self.NPROC,"NPROC")
         #we need either:at least 1 AK8 + 1 AK4, or at least 3 AK4 jet For a semileptonic decay.
         self.a.Cut('nFatJet','(nFatJet > 0 && nJet > 0) || (nJet > 2)')
-        self.NJETS = self.getNweighted()
-        self.AddCutflowColumn(self.NJETS,"NJETS")
+        #self.NJETS = self.getNweighted()
+        #self.AddCutflowColumn(self.NJETS,"NJETS")
 
         # we do not want electrons produced by photon pairs. They will mess up our data because they have 0 invariant mass.
         self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
         self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
-        self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav != 4 && Muon_genPartFlav != 5')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
+        self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav == 0 || Muon_genPartFlav == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
+        #self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01')
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
 
 
         self.a.Define('nTotalLepton','nNonConvertedElectron + nNotHvyMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
-        self.NLeptons = self.getNweighted()
-        self.AddCutflowColumn(self.NLeptons,"NLeptons")         
+        #self.NLeptons = self.getNweighted()
+        #self.AddCutflowColumn(self.NLeptons,"NLeptons")         
 
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
@@ -141,8 +142,8 @@ class ttbarphiClass:
 
         #Debugging: the pt constraint might be too tight
         #self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
-        self.NPreselection = self.getNweighted()
-        self.AddCutflowColumn(self.NPreselection,"NPreselection")
+        #self.NPreselection = self.getNweighted()
+        #self.AddCutflowColumn(self.NPreselection,"NPreselection")
         print ("Pass Preselection stage")
         return self.a.GetActiveNode()
     
@@ -153,8 +154,8 @@ class ttbarphiClass:
         #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
         self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,NotHvyMuon_pt,NonConvertedElectron_phi,NotHvyMuon_phi,NonConvertedElectron_eta,NotHvyMuon_eta,NonConvertedElectron_charge,NotHvyMuon_charge)')
         self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
-        self.NPassAllSelection = self.getNweighted()
-        self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
+        #self.NPassAllSelection = self.getNweighted()
+        #self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
         print ("Pass selection stage")
         return self.a.GetActiveNode()
     
@@ -189,11 +190,11 @@ class ttbarphiClass:
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
         #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
-        self.NFinalEvent = self.getNweighted()
-        self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
+        #self.NFinalEvent = self.getNweighted()
+        #self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
-    def Snapshot(self,node=None,colNames=[]):
+    def Snapshot(self,node=None,colNames=[],signal=False):
         startNode = self.a.GetActiveNode()
         if node == None: node = self.a.GetActiveNode()
         #colNames[str]:give what variales to keep at the snapshot
@@ -205,19 +206,23 @@ class ttbarphiClass:
         
        # columns = ['nMuon']
 
-        '''
+        
         if not self.a.isData:
-            columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
-            columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
+            if signal == False:
+                columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
+                columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
 
-            if self.year == '16' or self.year == '17' or self.year == '16APV':
-                columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
-                columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
-	'''
-        '''
-            elif self.year == '18':
-                columns.append('HEM_drop__nom')
-        '''
+                if self.year == '16' or self.year == '17' or self.year == '16APV':
+                    columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
+                    columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
+	
+                '''
+                elif self.year == '18':
+                    columns.append('HEM_drop__nom')
+                '''
+            elif signal == True:
+                columns.extend(['Pileup__nom','Pileup__up','Pileup__down'])
+                columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal'])
 
         if (len(colNames) > 0):
             columns.extend(colNames)
