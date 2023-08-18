@@ -17,7 +17,7 @@ selection.Preselection()
 selection.Selection()
 selection.JetsCandidateKinematicinfo()
 selection.MassReconstruction()
-selection.ApplyStandardCorrections(snapshot = True)
+selection.ApplyStandardCorrections()
 print('corrections are {}'.format(selection.GetXsecScale()))
 selection.a.MakeWeightCols(extraNominal='' if selection.a.isData else 'genWeight*%s'%selection.GetXsecScale())
 
