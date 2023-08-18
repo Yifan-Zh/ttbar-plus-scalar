@@ -55,7 +55,10 @@ class ttbarphiClass:
             self.a.isData = True
         else:
             self.a.isData = False
-
+		if 'signal' in inputfile:
+			self.a.isSignal = True
+		else:
+			self.a.isSignal = False
     #this is the end of initializer. Now we can apply preselection. Cpp modules will be compiled for each task, but we will not compile them in class function.
 
     def AddCutflowColumn(self, var, varName):
@@ -194,7 +197,7 @@ class ttbarphiClass:
         #self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
-    def Snapshot(self,node=None,colNames=[],signal=False):
+    def Snapshot(self,node=None,colNames=[]):
         startNode = self.a.GetActiveNode()
         if node == None: node = self.a.GetActiveNode()
         #colNames[str]:give what variales to keep at the snapshot
@@ -208,7 +211,8 @@ class ttbarphiClass:
 
         
         if not self.a.isData:
-            if signal == False:
+			#currently, the signal file gives error when computing pdf corrections. In future this problem should be fixed and removed
+            if self.a.isSignal == False:
                 columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
                 columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
 
@@ -220,7 +224,7 @@ class ttbarphiClass:
                 elif self.year == '18':
                     columns.append('HEM_drop__nom')
                 '''
-            elif signal == True:
+            elif self.a.isSignal == True:
                 columns.extend(['Pileup__nom','Pileup__up','Pileup__down'])
                 columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal'])
 
