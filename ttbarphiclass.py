@@ -110,18 +110,21 @@ class ttbarphiClass:
     # this is the preselection for non-boosted case. In this case DO NOT use top tagger (it won't work)
     # we first want to mark all the event with:
     def Preselection(self):
-        #self.NPROC = self.getNweighted()
-        #self.AddCutflowColumn(self.NPROC,"NPROC")
+        self.NPROC = self.getNweighted()
+        self.AddCutflowColumn(self.NPROC,"NPROC")
         #we need either:at least 1 AK8 + 1 AK4, or at least 3 AK4 jet For a semileptonic decay.
-        self.a.Cut('nFatJet','(nFatJet > 0 && nJet > 0) || (nJet > 2)')
-        #self.NJETS = self.getNweighted()
-        #self.AddCutflowColumn(self.NJETS,"NJETS")
+        #we want the jets the have at least pt >35GeV, FatJet with pt > 70GeV
+        self.a.SubCollection('EnergeticFatJet','FatJet','FatJet_pt > 70')
+        self.a.SubCollection('EnergeticJet','Jet','Jet_pt > 35')
+        self.a.Cut('nFatJet','(nEnergeticFatJet > 0 && nEnergeticJet > 0) || (nEnergeticJet > 2)')
+        self.NJETS = self.getNweighted()
+        self.AddCutflowColumn(self.NJETS,"NJETS")
 
         # we do not want electrons produced by photon pairs. They will mess up our data because they have 0 invariant mass.
         self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
         self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
-        self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav == 0 || Muon_genPartFlav == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
-        #self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01')
+        #self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav == 0 || Muon_genPartFlav == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
+        self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01')
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
 
@@ -135,7 +138,7 @@ class ttbarphiClass:
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
         
         #note:currently, modified to examine Muons only. This means that we should have at least 2 Muon per event.
-	#we want to focus on the Muon NOT from heavy flavor particles
+	    #we want to focus on the Muon NOT from heavy flavor particles
         self.a.Cut('MuonNumberCut','nNotHvyMuon > 1')
         self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')
         self.a.Define('nLeadingLeptons','LeadingThreeLepton.size()/2')
@@ -151,7 +154,6 @@ class ttbarphiClass:
     def Selection(self):
 
         #now we start to handle the leptons. We'll handle this part in c++
-        #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
         self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,NotHvyMuon_pt,NonConvertedElectron_phi,NotHvyMuon_phi,NonConvertedElectron_eta,NotHvyMuon_eta,NonConvertedElectron_charge,NotHvyMuon_charge)')
         self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
         #self.NPassAllSelection = self.getNweighted()
@@ -164,15 +166,17 @@ class ttbarphiClass:
         #first give relatvent information of lepton; do not use Lepton_*, will cause a bug in snapshot
         #we now define the kinematics variables of the three lepton. The one from W followed by ones from phi
 
-        self.a.Define('PhiLepton1_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_pt,Muon_pt)')
-        self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_eta,Muon_eta)')
-        self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_phi,Muon_phi)')
-        self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,NonConvertedElectron_mass,Muon_mass)')
+        self.a.Define('PhiLepton1_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_pt,NotHvyMuon_pt)')
+        self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
+        self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_phi,NotHvyMuon_phi)')
+        self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,NonConvertedElectron_mass,NotHvyMuon_mass)')
 
-        self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_pt,Muon_pt)')
-        self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_eta,Muon_eta)')
-        self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_phi,Muon_phi)')
-        self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons] ,NonConvertedElectron_mass,Muon_mass)')
+        self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_pt,NotHvyMuon_pt)')
+        self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
+        self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_phi,NotHvyMuon_phi)')
+        self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons] ,NonConvertedElectron_mass,NotHvyMuon_mass)')
+
+        self.a.Define('PhiLepton1_MotherType','GetIntLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_genPartFlav,NotHvyMuon_genPartFlav)')
 
 
         return self.a.GetActiveNode()
@@ -190,8 +194,8 @@ class ttbarphiClass:
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
         #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
-        #self.NFinalEvent = self.getNweighted()
-        #self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
+        self.NFinalEvent = self.getNweighted()
+        self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
     def Snapshot(self,node=None,colNames=[],signal=False):
@@ -201,7 +205,8 @@ class ttbarphiClass:
 
         columns = [
             'PhiInvMass','WhichLepton',
-            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass'
+            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass','PhiLepton1_MotherType',
+            'PhiLepton2_pt','PhiLepton2_eta','PhiLepton2_phi','PhiLepton2_mass'
         ]
         
        # columns = ['nMuon']

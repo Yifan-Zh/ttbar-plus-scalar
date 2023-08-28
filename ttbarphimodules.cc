@@ -277,7 +277,7 @@ std::vector<int> FindLowerPhiMass (std::vector<std::vector<int>> Pairs, RVec<int
     return Pairs[LowestMassPair];
 }
 
-//Don't bother with the lepton from top in non-boosted case. It's just not going to help by any means. Find all the relavent pairs and just compute if 1. they have opposite charge 2. their invariant mass.
+//Don't bother with the lepton from top in non-boosted case. Find all the relavent pairs and just compute if 1. they have opposite charge 2. their invariant mass.
 RVec<int> FindPhiLepton (RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta, RVec<int> Electron_charge, RVec<int> Muon_charge){
     //first, find out all the pairs using LeadLeptonInfo: the first half of it will contain only 1 or 2 based on whether it's electron or muon
     //it's possible that an event will contain no qualified pairs because they are all of the same sign. We want to abort such data if happened.
