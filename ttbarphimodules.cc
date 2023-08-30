@@ -255,37 +255,25 @@ float FindPhiMass (std::vector<int> Pair, RVec<int> LeadLeptonInfo, RVec<float> 
     return InvariantMass;
 }
 
-std::vector<int> FindLowerPhiMass (std::vector<std::vector<int>> Pairs, RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta){
-    std::vector<float> PhiMass;
-    int LowestMassPair;
-    float LowestMassValue;
+RVec<float> FindAllPhiMass (std::vector<std::vector<int>> Pairs, RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta){
+    RVec<float> PhiMass;
 
     for (int i = 0; i < Pairs.size();i++){
         PhiMass.push_back(FindPhiMass(Pairs[i],LeadLeptonInfo, Electron_pt, Muon_pt, Electron_phi, Muon_phi, Electron_eta, Muon_eta));
     }
 
-    LowestMassPair = 0;
-    LowestMassValue = PhiMass[0];
-
-    for (int i = 0; i < Pairs.size(); i++){
-        if (PhiMass[i] < LowestMassValue){
-            LowestMassValue = PhiMass[i];
-            LowestMassPair = i;
-        }
-    }
-
-    return Pairs[LowestMassPair];
+    return PhiMass;
 }
 
-//Don't bother with the lepton from top in non-boosted case. Find all the relavent pairs and just compute if 1. they have opposite charge 2. their invariant mass.
-RVec<int> FindPhiLepton (RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta, RVec<int> Electron_charge, RVec<int> Muon_charge){
+//Don't bother with the lepton from top in non-boosted case. It's just not going to help by any means. Find all the relavent pairs and just compute if 1. they have opposite charge 2. their invariant mass.
+//Plot not just the lowest mass pair, but all pairs. This way we can make sure we don't yield any real leptons
+RVec<float> FindPhiLeptonMass (RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec<float> Muon_pt, RVec<float> Electron_phi, RVec<float> Muon_phi, RVec<float> Electron_eta, RVec<float> Muon_eta, RVec<int> Electron_charge, RVec<int> Muon_charge){
     //first, find out all the pairs using LeadLeptonInfo: the first half of it will contain only 1 or 2 based on whether it's electron or muon
     //it's possible that an event will contain no qualified pairs because they are all of the same sign. We want to abort such data if happened.
     std::vector<int> LeptonType;
     std::vector<std::vector<int>> SameFlavorPairs;
     std::vector<std::vector<int>> SameFlavorOppositeSignPairs;
-    std::vector<int> LowerPhiMassPair = {0,0};
-    RVec<int> PhiLeptonPair = {0,0,0}; //The first digit is used to make sure all test are passed.
+    RVec<float> PhiLeptonMassPair;
     for (int i = 0; i < (LeadLeptonInfo.size()/2); i++){
         LeptonType.push_back(LeadLeptonInfo[i]);
     }
@@ -294,14 +282,10 @@ RVec<int> FindPhiLepton (RVec<int> LeadLeptonInfo, RVec<float> Electron_pt, RVec
     SameFlavorOppositeSignPairs = FindOppositeSignPairs (LeadLeptonInfo,SameFlavorPairs,Electron_charge,Muon_charge);
     //now, we compute the mass of all these pairs, and choose the pair with lowest invariant mass
     if (SameFlavorOppositeSignPairs.size() > 0){
-        PhiLeptonPair[0] = 1;
-        LowerPhiMassPair = FindLowerPhiMass (SameFlavorOppositeSignPairs, LeadLeptonInfo, Electron_pt, Muon_pt, Electron_phi, Muon_phi,Electron_eta, Muon_eta);
+        PhiLeptonMassPair = FindAllPhiMass (SameFlavorOppositeSignPairs, LeadLeptonInfo, Electron_pt, Muon_pt, Electron_phi, Muon_phi,Electron_eta, Muon_eta);
     }
 
-    PhiLeptonPair[1] = LowerPhiMassPair[0];
-    PhiLeptonPair[2] = LowerPhiMassPair[1];
-
-    return PhiLeptonPair;
+    return PhiLeptonMassPair;
 }
 
 float NeutrinoEta(float Lepton_pt, float Lepton_phi, float Lepton_eta, float MET_pt, float MET_phi){//find eta using mass of Wboson
@@ -348,4 +332,13 @@ const ROOT::RVec<int> FindMothersPdgId(const ROOT::RVec<int>& genpart_id, const 
     }
     return mother_pdgids;
 
+}
+
+const ROOT::RVec<int> FindRecoMuonMother(const ROOT::RVec<int>& Genpart_pdgid, const ROOT::RVec<int>& Mother_Idx, const ROOT::RVec<int>& Muon_GenPartIdx){
+    std::size_t N = Muon_GenPartIdx.size();
+    RVec<int> MuonMother_pdgids(N);
+    for (std::size_t i = 0; i < N; i++){
+        MuonMother_pdgids[i] = Genpart_pdgid[Mother_Idx[Muon_GenPartIdx[i]]];
+    }
+    return MuonMother_pdgids;
 }

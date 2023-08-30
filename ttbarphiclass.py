@@ -77,7 +77,7 @@ class ttbarphiClass:
                 self.a.Cut('lumiFilter',lumiFilter.GetCall(evalArgs={"lumi":"luminosityBlock"}))
 
             else:
-                #self.a = AutoPU(self.a, self.year, ULflag=True)
+                self.a = AutoPU(self.a, self.year, ULflag=True)
                 self.a.AddCorrection(
                     Correction('Pdfweight','TIMBER/Framework/include/PDFweight_uncert.h',[self.a.lhaid],corrtype='uncert')
                 )
@@ -113,9 +113,8 @@ class ttbarphiClass:
         self.NPROC = self.getNweighted()
         self.AddCutflowColumn(self.NPROC,"NPROC")
         #we need either:at least 1 AK8 + 1 AK4, or at least 3 AK4 jet For a semileptonic decay.
-        #we want the jets the have at least pt >35GeV, FatJet with pt > 70GeV
-        self.a.SubCollection('EnergeticFatJet','FatJet','FatJet_pt > 70')
-        self.a.SubCollection('EnergeticJet','Jet','Jet_pt > 35')
+        self.a.SubCollection('EnergeticFatJet','FatJet','FatJet_pt > 70 && FatJet_jetId == 6')
+        self.a.SubCollection('EnergeticJet','Jet','Jet_pt > 35 && Jet_jetId == 6')
         self.a.Cut('nFatJet','(nEnergeticFatJet > 0 && nEnergeticJet > 0) || (nEnergeticJet > 2)')
         self.NJETS = self.getNweighted()
         self.AddCutflowColumn(self.NJETS,"NJETS")
@@ -123,16 +122,15 @@ class ttbarphiClass:
         # we do not want electrons produced by photon pairs. They will mess up our data because they have 0 invariant mass.
         self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
         self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
-        #self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav == 0 || Muon_genPartFlav == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
-        self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01')
+        self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01 && Muon_tightId == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
 
 
         self.a.Define('nTotalLepton','nNonConvertedElectron + nNotHvyMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
-        #self.NLeptons = self.getNweighted()
-        #self.AddCutflowColumn(self.NLeptons,"NLeptons")         
+        self.NLeptons = self.getNweighted()
+        self.AddCutflowColumn(self.NLeptons,"NLeptons")         
 
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
@@ -140,13 +138,13 @@ class ttbarphiClass:
         #note:currently, modified to examine Muons only. This means that we should have at least 2 Muon per event.
 	    #we want to focus on the Muon NOT from heavy flavor particles
         self.a.Cut('MuonNumberCut','nNotHvyMuon > 1')
-        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')
-        self.a.Define('nLeadingLeptons','LeadingThreeLepton.size()/2')
+        self.a.Define('LeadingLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')
+        self.a.Define('nLeadingLeptons','LeadingLepton.size()/2')
 
         #Debugging: the pt constraint might be too tight
         #self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
-        #self.NPreselection = self.getNweighted()
-        #self.AddCutflowColumn(self.NPreselection,"NPreselection")
+        self.NPreselection = self.getNweighted()
+        self.AddCutflowColumn(self.NPreselection,"NPreselection")
         print ("Pass Preselection stage")
         return self.a.GetActiveNode()
     
@@ -154,31 +152,13 @@ class ttbarphiClass:
     def Selection(self):
 
         #now we start to handle the leptons. We'll handle this part in c++
-        self.a.Define('LeptonTestAndReOrdering','FindPhiLepton(LeadingThreeLepton,NonConvertedElectron_pt,NotHvyMuon_pt,NonConvertedElectron_phi,NotHvyMuon_phi,NonConvertedElectron_eta,NotHvyMuon_eta,NonConvertedElectron_charge,NotHvyMuon_charge)')
-        self.a.Cut('PassAllSelection','LeptonTestAndReOrdering[0] == 1')
-        #self.NPassAllSelection = self.getNweighted()
-        #self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
+        #we just want the most basic selection according to 1.whether it's 3 lepon of same flavor or 2+2 2. In first case, identify all the particle-antiparicle pairs
+        self.a.Define('AllMuonPairs','FindPhiLeptonMass(LeadingLepton,NonConvertedElectron_pt,NotHvyMuon_pt,NonConvertedElectron_phi,NotHvyMuon_phi,NonConvertedElectron_eta,NotHvyMuon_eta,NonConvertedElectron_charge,NotHvyMuon_charge)')
+        self.a.Define('nAllMuonPairs','AllMuonPairs.size()')
+        self.a.Cut('EmptyPairCut','nAllMuonPairs > 0')
+        self.NPassAllSelection = self.getNweighted()
+        self.AddCutflowColumn(self.NPassAllSelection,"NPassAllSelection")  
         print ("Pass selection stage")
-        return self.a.GetActiveNode()
-    
-    #now we need to make the plot. For purpose of invariant mass reconstruction, we need to specify the lepton pt, eta, phi and mass manually. We will do this using a user defined C++ code.
-    def JetsCandidateKinematicinfo(self):
-        #first give relatvent information of lepton; do not use Lepton_*, will cause a bug in snapshot
-        #we now define the kinematics variables of the three lepton. The one from W followed by ones from phi
-
-        self.a.Define('PhiLepton1_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_pt,NotHvyMuon_pt)')
-        self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
-        self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_phi,NotHvyMuon_phi)')
-        self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,NonConvertedElectron_mass,NotHvyMuon_mass)')
-
-        self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_pt,NotHvyMuon_pt)')
-        self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
-        self.a.Define('PhiLepton2_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_phi,NotHvyMuon_phi)')
-        self.a.Define('PhiLepton2_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons] ,NonConvertedElectron_mass,NotHvyMuon_mass)')
-
-        self.a.Define('PhiLepton1_MotherType','GetIntLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_genPartFlav,NotHvyMuon_genPartFlav)')
-
-
         return self.a.GetActiveNode()
     
     
@@ -188,46 +168,34 @@ class ttbarphiClass:
 
     def MassReconstruction(self):
 
-        self.a.Define('PhiLep1_vect','hardware::TLvector(PhiLepton1_pt,PhiLepton1_eta,PhiLepton1_phi,PhiLepton1_mass)')
-        self.a.Define('PhiLep2_vect','hardware::TLvector(PhiLepton2_pt,PhiLepton2_eta,PhiLepton2_phi,PhiLepton2_mass)')
- 
-        self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
-        self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
-        #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
         self.NFinalEvent = self.getNweighted()
         self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
-    def Snapshot(self,node=None,colNames=[],signal=False):
+    def Snapshot(self,node=None,colNames=[]):
         startNode = self.a.GetActiveNode()
         if node == None: node = self.a.GetActiveNode()
         #colNames[str]:give what variales to keep at the snapshot
 
         columns = [
-            'PhiInvMass','WhichLepton',
-            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass','PhiLepton1_MotherType',
-            'PhiLepton2_pt','PhiLepton2_eta','PhiLepton2_phi','PhiLepton2_mass'
+            'AllMuonPairs'
         ]
         
        # columns = ['nMuon']
 
-        
+        '''
         if not self.a.isData:
-            if signal == False:
-                columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
-                columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
+            columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
+            columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
 
-                if self.year == '16' or self.year == '17' or self.year == '16APV':
-                    columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
-                    columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
-	
-                '''
-                elif self.year == '18':
-                    columns.append('HEM_drop__nom')
-                '''
-            elif signal == True:
-                columns.extend(['Pileup__nom','Pileup__up','Pileup__down'])
-                columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal'])
+            if self.year == '16' or self.year == '17' or self.year == '16APV':
+                columns.extend(['L1PreFiringWeight__nom','L1PreFiringWeight__up','L1PreFiringWeight__down'])
+                columns.extend(['weight__L1PreFiringWeight_down','weight__L1PreFiringWeight_up'])
+	'''
+        '''
+            elif self.year == '18':
+                columns.append('HEM_drop__nom')
+        '''
 
         if (len(colNames) > 0):
             columns.extend(colNames)
