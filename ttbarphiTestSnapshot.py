@@ -10,9 +10,9 @@ start = time.time()
 
 CompileCpp('ttbarphimodules.cc')
 
-filename = 'ttbarphi-signal_18'
+filename = 'ttbar-semilep_17'
 
-selection = ttbarphiClass('{}.txt'.format(filename),18,1,1)
+selection = ttbarphiClass('{}.txt'.format(filename),17,1,1)
 selection.Preselection()
 selection.Selection()
 selection.MassReconstruction()
