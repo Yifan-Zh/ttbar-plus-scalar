@@ -49,6 +49,21 @@ histList.append(h3)
 h4 = selection.a.DataFrame.Histo1D(('PhiLepton1_MotherType','Mother;MotherId;N_{Events}',30,0,15),'PhiLepton1_MotherType')
 histList.append(h4)
 
+h5 = selection.a.DataFrame.Histo2D(('LepCandidate1_pt_vs_DeltaR','Pt vs DeltaR;Pt_{GeV};DeltaR',20,0,60,40,0,4),'PhiLepton1_pt','PhiDeltaR')
+histList.append(h5)
+
+h6 = selection.a.DataFrame.Histo1D(('PhiLepton1_pt','Pt;pt;N_{Events}',100,0,100),'PhiLepton1_pt')
+histList.append(h6)
+
+h7 = selection.a.DataFrame.Histo1D(('PhiDeltaR','DeltaR;PhiDeltaR;N_{Events}',100,0,5),'PhiDeltaR')
+histList.append(h7)
+
+h8 = selection.a.DataFrame.Histo1D(('PhiLepton1_PfIso04','Isolation value;PhiLepton1_PfIso04;N_{Events}',100,0,2),'PhiLepton1_PfIso04')
+histList.append(h8)
+
+h9 = selection.a.DataFrame.Histo1D(('PhiInvMass0To10','Invariant Mass (0-10 GeV);m_{SD}(GeV);N_{Events}',200,0,10),'PhiInvMass')
+histList.append(h9)
+
 print('the total number of event is {}'.format(i1))
 print('the effective number of event is {}'.format(i2))
 
@@ -70,8 +85,8 @@ tempfile = ROOT.TFile.Open('rootfiles/kinDist_{}.root'.format(filename))
 h1 = tempfile.Get("PhiInvMass__nominal")
 histList.append(h1)'''
 
-#h2 = selection.a.DataFrame.Histo1D(('WhichLepton','',100,0,10),'WhichLepton')
-#histList.append(h2)
+h10 = selection.a.DataFrame.Histo1D(('WhichLepton','',100,0,10),'WhichLepton')
+histList.append(h10)
 
 c = ROOT.TCanvas('c','c')
 c.cd()

@@ -124,15 +124,15 @@ class ttbarphiClass:
         self.a.SubCollection('NonConvertedElectron','Electron','Electron_convVeto == 1')
         self.a.Cut('nLepton','nNonConvertedElectron > 0 || nMuon > 0') #make sure at least one lepton exist
         #self.a.SubCollection('NotHvyMuon','Muon','Muon_genPartFlav == 0 || Muon_genPartFlav == 1')#exclude the muons coming from b hadron decay as they will also have very low mass. This is for MC data only. For actually data, similar effect can be achieved by doing isolation.
-        self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01')
+        self.a.SubCollection('NotHvyMuon','Muon','Muon_pt > 0.01 && Muon_pfRelIso04_all <0.15')#tight isolation
 
         #we do not want to reconstruct ttbar in this case. It's very difficult to do without the boosted condition
 
 
         self.a.Define('nTotalLepton','nNonConvertedElectron + nNotHvyMuon')
         self.a.Cut('LeptonNumberCut','nTotalLepton > 2')
-        #self.NLeptons = self.getNweighted()
-        #self.AddCutflowColumn(self.NLeptons,"NLeptons")         
+        self.NLeptons = self.getNweighted()
+        self.AddCutflowColumn(self.NLeptons,"NLeptons")         
 
         # we would find the leading leptons according to their pt. The output has the form {Electron/Muon(represented by 1/2), relative postion insde the corresponding vector}
         # for example, if the leading leptons are Electron[2],Muon[3],Electroon[4], then it would be {1,2,1,2,3,4}
@@ -170,6 +170,7 @@ class ttbarphiClass:
         self.a.Define('PhiLepton1_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
         self.a.Define('PhiLepton1_phi','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_phi,NotHvyMuon_phi)')
         self.a.Define('PhiLepton1_mass','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons] ,NonConvertedElectron_mass,NotHvyMuon_mass)')
+        self.a.Define('PhiLepton1_PfIso04','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[1]],LeadingThreeLepton[LeptonTestAndReOrdering[1] + nLeadingLeptons],NonConvertedElectron_pfRelIso03_all,NotHvyMuon_pfRelIso04_all)')
 
         self.a.Define('PhiLepton2_pt','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_pt,NotHvyMuon_pt)')
         self.a.Define('PhiLepton2_eta','GetFloatLeptonProperty(LeadingThreeLepton[LeptonTestAndReOrdering[2]],LeadingThreeLepton[LeptonTestAndReOrdering[2] + nLeadingLeptons],NonConvertedElectron_eta,NotHvyMuon_eta)')
@@ -193,7 +194,8 @@ class ttbarphiClass:
  
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
-        #self.a.Cut('WhateverDebugThisIs','PhiInvMass < 10')
+        self.a.Define('PhiDeltaR','hardware::DeltaR(PhiLep1_vect,PhiLep2_vect)')
+        #self.a.Cut('WhateverDebugThisIs','PhiLepton1_pt > 30 && PhiLepton2_pt > 30')
         self.NFinalEvent = self.getNweighted()
         self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
@@ -204,8 +206,8 @@ class ttbarphiClass:
         #colNames[str]:give what variales to keep at the snapshot
 
         columns = [
-            'PhiInvMass','WhichLepton',
-            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass','PhiLepton1_MotherType',
+            'PhiInvMass','WhichLepton','PhiDeltaR',
+            'PhiLepton1_pt','PhiLepton1_eta','PhiLepton1_phi','PhiLepton1_mass','PhiLepton1_MotherType','PhiLepton1_PfIso04',
             'PhiLepton2_pt','PhiLepton2_eta','PhiLepton2_phi','PhiLepton2_mass'
         ]
         
