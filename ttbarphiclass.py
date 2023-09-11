@@ -55,6 +55,12 @@ class ttbarphiClass:
             self.a.isData = True
         else:
             self.a.isData = False
+        
+        # the following is added due to a current bug in corrections on signal files
+        if 'signal' in inputfile:
+            self.a.isSignal = True
+        else:
+            self.a.isSignal = False
 
     #this is the end of initializer. Now we can apply preselection. Cpp modules will be compiled for each task, but we will not compile them in class function.
 
@@ -140,11 +146,9 @@ class ttbarphiClass:
         #note:currently, modified to examine Muons only. This means that we should have at least 2 Muon per event.
 	    #we want to focus on the Muon NOT from heavy flavor particles
         self.a.Cut('MuonNumberCut','nNotHvyMuon > 1')
-        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')
+        self.a.Define('LeadingThreeLepton','FindLeadLepton(NonConvertedElectron_pt,NotHvyMuon_pt)')#not the leading three anymore, it's actually just all muons
         self.a.Define('nLeadingLeptons','LeadingThreeLepton.size()/2')
 
-        #Debugging: the pt constraint might be too tight
-        #self.a.Cut('PreselectionPtCut','LeptonMinPtConstriant == 1')
         #self.NPreselection = self.getNweighted()
         #self.AddCutflowColumn(self.NPreselection,"NPreselection")
         print ("Pass Preselection stage")
@@ -200,7 +204,7 @@ class ttbarphiClass:
         self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")
         return self.a.GetActiveNode()
     
-    def Snapshot(self,node=None,colNames=[],signal=False):
+    def Snapshot(self,node=None,colNames=[]):
         startNode = self.a.GetActiveNode()
         if node == None: node = self.a.GetActiveNode()
         #colNames[str]:give what variales to keep at the snapshot
@@ -215,7 +219,7 @@ class ttbarphiClass:
 
         
         if not self.a.isData:
-            if signal == False:
+            if self.a.isSignal == False:
                 columns.extend(['Pileup__nom','Pileup__up','Pileup__down','Pdfweight__up','Pdfweight__down'])
                 columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal','weight__Pdfweight_down','weight__Pdfweight_up'])
 
@@ -227,16 +231,12 @@ class ttbarphiClass:
                 elif self.year == '18':
                     columns.append('HEM_drop__nom')
                 '''
-            elif signal == True:
+            elif self.a.isSignal == True:
                 columns.extend(['Pileup__nom','Pileup__up','Pileup__down'])
                 columns.extend(['weight__Pileup_up','weight__Pileup_down','weight__nominal'])
 
         if (len(colNames) > 0):
             columns.extend(colNames)
-
-        testcol = ['PhiInvMass', 'WhichLepton',
-                    'PhiLepton1_pt', 'PhiLepton1_eta', 'PhiLepton1_phi', 'PhiLepton1_mass'
-                        ]
 
         self.a.SetActiveNode(node)
         self.a.Snapshot(columns,'ttbarphisnapshot_%s_%s_%sof%s.root'%(self.setname,self.year,self.ijob,self.njobs),'Events',openOption='RECREATE',saveRunChain=True)
