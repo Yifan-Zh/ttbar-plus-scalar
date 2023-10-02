@@ -119,10 +119,15 @@ class ttbarphiClass:
         self.NPROC = self.getNweighted()
         self.AddCutflowColumn(self.NPROC,"NPROC")
         #we need either:at least 1 AK8 + 1 AK4, or at least 3 AK4 jet For a semileptonic decay.
+        #IMPORTANT:in fact, it might be better to demand 4 or more AK4 jets; it's fairly unlikely the two jets from W decay will merge
+        
         #we want the jets the have at least pt >35GeV, FatJet with pt > 70GeV
         self.a.SubCollection('EnergeticFatJet','FatJet','FatJet_pt > 70')
         self.a.SubCollection('EnergeticJet','Jet','Jet_pt > 35')
         self.a.Cut('nFatJet','(nEnergeticFatJet > 0 && nEnergeticJet > 0) || (nEnergeticJet > 2)')
+        #in any case, we should be able to pickup at least one b-jet using b tagger. Don't do it, cause loss in signal efficiency. Some b jets will not be picked up
+        #self.a.Define('nbjets','Findnbjets(EnergeticJet_btagCSVV2,0.46)')
+        #self.a.Cut('nbjetCut','nbjets > 0')
         self.NJETS = self.getNweighted()
         self.AddCutflowColumn(self.NJETS,"NJETS")
 
@@ -199,6 +204,7 @@ class ttbarphiClass:
         self.a.Define('PhiInvMass','hardware::InvariantMass({PhiLep1_vect,PhiLep2_vect})')#invariant mass of the resonance particle
         self.a.Define('WhichLepton','LeadingThreeLepton[LeptonTestAndReOrdering[2]]')
         self.a.Define('PhiDeltaR','hardware::DeltaR(PhiLep1_vect,PhiLep2_vect)')
+        #self.a.Define('PhiPt','PhiCandidatePt(PhiLepton1_pt,PhiLepton2_pt,PhiLepton1_phi,PhiLepton2_phi)')
         #self.a.Cut('WhateverDebugThisIs','PhiLepton1_pt > 30 && PhiLepton2_pt > 30')
         self.NFinalEvent = self.getNweighted()
         self.AddCutflowColumn(self.NFinalEvent,"NFinalEvent")

@@ -25,7 +25,7 @@ start = time.time()
 CompileCpp('ttbarphimodules.cc')
 
 
-selection = ttbarphiClass('{}_{}.txt'.format(args.setname,args.era),args.era,args.ijob,args.njobs)#use the director raw_nano if needed
+selection = ttbarphiClass('raw_nano/{}_{}.txt'.format(args.setname,args.era),args.era,args.ijob,args.njobs)#use the director raw_nano if needed
 
 selection.Preselection()
 selection.Selection()
@@ -77,6 +77,9 @@ histList.append(h8)
 
 h9 = selection.a.DataFrame.Histo1D(('PhiInvMass0To10','Invariant Mass (0-10 GeV);m_{SD}(GeV);N_{Events}',200,0,10),'PhiInvMass')
 histList.append(h9)
+
+#h10 = selection.a.DataFrame.Histo1D(('PhiPt','Phi Pt;Pt(GeV);N_{Events}',200,0,100),'PhiPt')
+#histList.append(h10)
 
 print('the total number of event is {}'.format(i1))
 print('the effective number of event is {}'.format(i2))

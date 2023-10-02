@@ -33,6 +33,18 @@ RVec<int> PickDijetsV2(RVec<float> FatJet_phi, RVec<float> Jet_phi, RVec<float> 
 
 }
 
+int Findnbjets(RVec<float> EnergeticJet_btagCSVV2, float tagger_score){
+
+    int n = 0;
+    for (int i = 0; i < EnergeticJet_btagCSVV2.size(); i++){
+        if (EnergeticJet_btagCSVV2[i] > tagger_score){
+            n = n + 1;
+        }
+    }
+
+    return n;
+}
+
 //Code assisted by Xianglong Wang
 //this method can fail if multiple lepton have same velocity. This is supposed to be extremely unlikely
 RVec<int> FindLeadLepton(RVec<float> Electron_pt, RVec<float> Muon_pt){
@@ -335,6 +347,16 @@ float TotalPt(float Top_pt,float Top_phi,float Bot_pt,float Bot_phi,float Lepton
     float pt_tot = 0;
     px = Top_pt * cos(Top_phi) + Bot_pt * cos(Bot_phi) + Lepton_pt * cos(Lepton_phi) + Neutrino_pt * cos(Neutrino_phi);
     py = Top_pt * sin(Top_phi) + Bot_pt * sin(Bot_phi) + Lepton_pt * sin(Lepton_phi) + Neutrino_pt * sin(Neutrino_phi);
+    pt_tot = sqrt(px*px + py*py);
+    return pt_tot;
+}
+
+float PhiCandidatePt(float mu1_pt, float mu2_pt, float mu1_phi, float mu2_phi){
+    float px = 0;
+    float py = 0;
+    float pt_tot = 0;
+    px = mu1_pt * cos(mu1_phi) + mu2_pt * cos(mu2_phi);
+    px = mu1_pt * sin(mu1_phi) + mu2_pt * sin(mu2_phi);
     pt_tot = sqrt(px*px + py*py);
     return pt_tot;
 }
